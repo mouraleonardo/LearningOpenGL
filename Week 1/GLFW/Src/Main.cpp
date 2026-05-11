@@ -1,3 +1,9 @@
+//#include <iostream>
+//using namespace std;
+//int main() {
+//cout << "Hello, World!" << endl;
+//cin.get();
+//}
 #include <glfw3.h>
 
 int main(void)
@@ -28,14 +34,14 @@ int main(void)
         // Start defining a group of vertices that will form triangles
         glBegin(GL_TRIANGLES);
 
-            // First vertex of the triangle (bottom-left)
-            glVertex2f(-0.5f, -0.5f);
+        // First vertex of the triangle (bottom-left)
+        glVertex2f(-0.5f, -0.5f);
 
-            // Second vertex of the triangle (top-center)
-            glVertex2f(0.0f, 0.5f);
+        // Second vertex of the triangle (top-center)
+        glVertex2f(0.0f, 0.5f);
 
-            // Third vertex of the triangle (bottom-right)
-            glVertex2f(0.5f, -0.5f);
+        // Third vertex of the triangle (bottom-right)
+        glVertex2f(0.5f, -0.5f);
 
         // Finish drawing the triangle
         glEnd();
@@ -50,3 +56,4 @@ int main(void)
     glfwTerminate();
     return 0;
 }
+
