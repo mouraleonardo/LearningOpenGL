@@ -33,6 +33,7 @@ The goal is to build a strong foundation for graphics programming and future gam
 - OpenGL
 - GLFW
 - GLEW
+- GLM
 - Visual Studio
 
 ---
@@ -63,6 +64,46 @@ The goal is to build a strong foundation for graphics programming and future gam
 
 ---
 
+## Week 3
+
+- Create a rotating triangle using transformation matrices
+- Add RGB vertex colors and pass color attributes to shaders
+- Learn how vertex and fragment shaders work together for color interpolation
+- Use Object-Oriented Programming (OOP) to organize OpenGL code into classes
+- Render an animated rotating RGB triangle using Modern OpenGL
+
+---
+
+## Week 4
+
+- Implemented 3D cube rendering using Modern OpenGL
+- Created a Mesh class using VAO, VBO, and EBO for indexed rendering
+- Added indexed cube geometry with RGB vertex colors
+- Developed a Shader class for GLSL shader compilation and management
+- Implemented a Renderer class with Model, View, and Projection (MVP) transformations
+- Integrated GLM for rotation, translation, and perspective projection matrices
+- Enabled depth testing for correct 3D object rendering
+- Added vertex and fragment shaders with RGB color interpolation
+- Applied Object-Oriented Programming (OOP) principles to organize rendering components
+- Structured the project using separate Headers, Shaders, and Dependencies folders
+
+---
+
+## Week 5
+
+- Implemented an animated vehicle using Modern OpenGL transformations and shader effects
+- Applied fundamental computer graphics concepts including translation, rotation, scaling, and orthographic projection
+- Developed time-based animations for realistic object movement
+- Created a moving vehicle with independently rotating wheels
+- Added animated smoke effects using transformation and shader techniques
+- Utilized GLSL shaders and uniform variables for dynamic rendering
+- Implemented mesh rendering using VAO, VBO, and indexed geometry
+- Integrated GLM for transformation matrix calculations
+- Built the project using OpenGL 3.3, GLFW, GLEW, and GLM
+- Continued applying Object-Oriented Programming (OOP) principles for modular and maintainable code
+
+---
+
 # Project Structure
 
 ```text
@@ -72,9 +113,11 @@ Src/
 |   |   |-- Include/
 |   |   `-- Lib/
 |   |
-|   `-- GLEW/
-|       |-- Include/
-|       `-- Lib/
+|   |-- GLEW/
+|   |   |-- Include/
+|   |   `-- Lib/
+|   |
+|   `-- GLM/
 |
 `-- main.cpp
 ```
@@ -98,6 +141,16 @@ Official website:
 https://glew.sourceforge.net/
 
 Download the Windows binaries.
+
+---
+
+## GLM
+
+Official website:
+
+https://github.com/g-truc/glm
+
+Download the latest release and extract the files into the `Dependencies/GLM/` directory.
 
 ---
 
@@ -156,6 +209,7 @@ Add:
 ```text
 $(ProjectDir)Dependencies\GLFW\Lib
 $(ProjectDir)Dependencies\GLEW\Lib
+$(ProjectDir)Dependencies\GLM
 ```
 
 ---
@@ -239,5 +293,5 @@ If everything is configured correctly, an OpenGL window should appear.
 
 # Author
 
-Leo
+Leonardo Moura
 
