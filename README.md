@@ -12,6 +12,28 @@ The goal is to build a strong foundation for graphics programming and future gam
 
 ---
 
+# Current Project
+
+Tank Battle is a top-down 2D tank combat prototype built with Modern OpenGL.
+
+Current features include:
+
+- Player-controlled tank
+- Enemy AI patrol and chase behavior
+- Projectile combat
+- Procedural battlefield generation
+- Destructible and indestructible obstacles
+- Collision detection
+- Custom rendering pipeline
+- OpenGL 3.3 Core Profile
+- GLFW input system
+- GLEW extension loading
+- GLM mathematics and transformations
+
+The project is being developed incrementally as part of the Game Engine Foundations course.
+
+---
+
 # Topics Covered
 
 - OpenGL basics
@@ -21,6 +43,15 @@ The goal is to build a strong foundation for graphics programming and future gam
 - VAO / VBO
 - Shaders
 - Transformations
+- Coordinate Spaces
+- Model / View / Projection (MVP)
+- Delta Time
+- Frame-Independent Motion
+- Input Systems
+- Collision Detection
+- Orthographic Projection
+- Basic AI
+- Procedural Generation
 - Camera systems
 - Lighting
 - Textures
@@ -104,6 +135,39 @@ The goal is to build a strong foundation for graphics programming and future gam
 
 ---
 
+## Week 6
+
+- Developed a complete Tank Battle prototype using Modern OpenGL
+- Implemented a game architecture based on Object-Oriented Programming (OOP)
+- Created a player-controlled tank with rotation, movement, and shooting mechanics
+- Added enemy AI with patrol and chase behaviors using a simple state machine
+- Implemented projectile systems for both player and enemy tanks
+- Developed procedural battlefield generation with randomized obstacle placement
+- Added destructible brick blocks and indestructible steel obstacles
+- Implemented collision detection for tanks, bullets, and environment objects
+- Built a custom Renderer system using Model, View, and Projection (MVP) transformations
+- Applied orthographic projection for 2D gameplay rendering
+- Implemented frame-independent movement using Delta Time
+- Added real-time keyboard input handling using GLFW
+- Learned and applied Coordinate Spaces:
+  - Model Space
+  - World Space
+  - View Space
+  - Projection Space
+- Used GLM for transformation matrices and vector mathematics
+- Continued using Modern OpenGL 3.3 Core Profile with custom GLSL shaders
+- Organized the project into reusable gameplay and rendering systems:
+  - Game
+  - Renderer
+  - Map
+  - Tank
+  - Enemy
+  - Bullet
+  - Shader
+  - Mesh
+
+---
+
 # Project Structure
 
 ```text
@@ -119,8 +183,14 @@ Src/
 |   |
 |   `-- GLM/
 |
+|-- Headers/
+|-- Shaders/
+|-- Src/
+|
 `-- main.cpp
 ```
+
+---
 
 # Download Dependencies
 
@@ -292,6 +362,5 @@ If everything is configured correctly, an OpenGL window should appear.
 ---
 
 # Author
-
 Leonardo Moura
 
