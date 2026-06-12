@@ -1,3 +1,58 @@
+/*
+    ============================================================
+    Renderer.h
+
+    Author: Leonardo Moura
+    Date: 6/12/2026
+
+    Description:
+
+    Defines the rendering subsystem used by the
+    Tank Battle game.
+
+    Responsibilities:
+
+        • Create renderable meshes
+        • Manage shader programs
+        • Manage transformation matrices
+        • Render tanks
+        • Render bullets
+        • Render map tiles
+        • Manage rendering resources
+
+    Rendering Architecture:
+
+                    Renderer
+                         |
+        -------------------------------------
+        |          |          |            |
+      Tanks     Bullets     Map        Shader
+        |
+    ----------------
+    |              |
+   Player       Enemies
+
+    Rendering Pipeline:
+
+        Game Objects
+              ↓
+        Model Matrix
+              ↓
+        View Matrix
+              ↓
+        Projection Matrix
+              ↓
+        MVP Matrix
+              ↓
+        Shader Program
+              ↓
+        GPU Rendering
+              ↓
+           Screen
+
+    ============================================================
+*/
+
 #ifndef RENDERER_H
 #define RENDERER_H
 
@@ -21,19 +76,44 @@ class Renderer
 private:
 
     //--------------------------------------------------
-    // Shader
+    // Shader Program
+    //
+    // Active shader used for all rendering
+    // operations.
+    //
+    // Responsible for:
+    //
+    //      • Vertex transformations
+    //      • Color output
+    //      • MVP processing
     //--------------------------------------------------
 
     Shader* shader;
 
     //--------------------------------------------------
-    // Uniforms
+    // Shader Uniforms
+    //
+    // Cached uniform locations used during
+    // rendering.
+    //
+    // mvpLocation
+    //      Location of the MVP matrix uniform
+    //      inside the shader program.
     //--------------------------------------------------
 
     int mvpLocation;
 
     //--------------------------------------------------
-    // Matrices
+    // Transformation Matrices
+    //
+    // projection
+    //      Orthographic projection matrix.
+    //
+    // view
+    //      Camera matrix.
+    //
+    // Current implementation uses a fixed
+    // top-down camera.
     //--------------------------------------------------
 
     glm::mat4 projection;
@@ -41,7 +121,13 @@ private:
     glm::mat4 view;
 
     //--------------------------------------------------
-    // Player Meshes
+    // Player Tank Meshes
+    //
+    // playerBodyMesh
+    //      Main tank body.
+    //
+    // playerTurretMesh
+    //      Tank cannon/turret.
     //--------------------------------------------------
 
     Mesh* playerBodyMesh;
@@ -49,7 +135,10 @@ private:
     Mesh* playerTurretMesh;
 
     //--------------------------------------------------
-    // Enemy Meshes
+    // Enemy Tank Meshes
+    //
+    // Separate meshes allow visual distinction
+    // between player and enemy units.
     //--------------------------------------------------
 
     Mesh* enemyBodyMesh;
@@ -58,12 +147,21 @@ private:
 
     //--------------------------------------------------
     // Bullet Mesh
+    //
+    // Shared by both player and enemy
+    // projectiles.
     //--------------------------------------------------
 
     Mesh* bulletMesh;
 
     //--------------------------------------------------
-    // Map Meshes
+    // Map Tile Meshes
+    //
+    // brickMesh
+    //      Breakable obstacle.
+    //
+    // steelMesh
+    //      Indestructible obstacle.
     //--------------------------------------------------
 
     Mesh* brickMesh;
@@ -73,21 +171,63 @@ private:
 private:
 
     //--------------------------------------------------
-    // Internal Draw
+    // Internal Rendering Helpers
+    //
+    // These functions are only used internally
+    // by the renderer.
     //--------------------------------------------------
 
+    /*
+        Draws a mesh using a supplied model matrix.
+
+        Calculates:
+
+            MVP =
+                Projection *
+                View *
+                Model
+
+        Then sends the result to the shader.
+    */
     void DrawMesh(
         Mesh* mesh,
         const glm::mat4& model);
 
+    /*
+        Draws a complete tank.
+
+        Components:
+
+            • Tank Body
+            • Tank Turret
+
+        Applies:
+
+            • Translation
+            • Rotation
+    */
     void DrawTank(
         const Tank& tank,
         Mesh* bodyMesh,
         Mesh* turretMesh);
 
+    /*
+        Draws a projectile.
+
+        Applies translation to the bullet's
+        world position.
+    */
     void DrawBullet(
         const Bullet& bullet);
 
+    /*
+        Draws a map tile.
+
+        Supported Types:
+
+            • Breakable
+            • Steel
+    */
     void DrawTile(
         const Tile& tile);
 
@@ -95,25 +235,59 @@ public:
 
     //--------------------------------------------------
     // Constructor
+    //
+    // Initializes renderer state and resource
+    // pointers.
     //--------------------------------------------------
 
     Renderer();
 
     //--------------------------------------------------
     // Initialization
+    //
+    // Creates all meshes required by the game.
+    //
+    // Meshes Created:
+    //
+    //      • Player Body
+    //      • Player Turret
+    //      • Enemy Body
+    //      • Enemy Turret
+    //      • Bullet
+    //      • Brick Block
+    //      • Steel Block
+    //
+    // Returns:
+    //
+    //      true
+    //          Success
+    //
+    //      false
+    //          Failure
     //--------------------------------------------------
 
     bool Initialize();
 
     //--------------------------------------------------
-    // Shader
+    // Shader Assignment
+    //
+    // Associates a shader program with the
+    // renderer.
+    //
+    // Also retrieves uniform locations.
     //--------------------------------------------------
 
     void SetShader(
         Shader* shaderProgram);
 
     //--------------------------------------------------
-    // Frame
+    // Frame Management
+    //
+    // BeginFrame()
+    //      Clears buffers and prepares rendering.
+    //
+    // EndFrame()
+    //      Finalizes rendering operations.
     //--------------------------------------------------
 
     void BeginFrame();
@@ -121,7 +295,19 @@ public:
     void EndFrame();
 
     //--------------------------------------------------
-    // Render Passes
+    // Rendering Passes
+    //
+    // RenderPlayer()
+    //      Draws the player tank.
+    //
+    // RenderEnemies()
+    //      Draws all enemy tanks.
+    //
+    // RenderBullets()
+    //      Draws all active projectiles.
+    //
+    // RenderMap()
+    //      Draws the battlefield.
     //--------------------------------------------------
 
     void RenderPlayer(
@@ -137,13 +323,24 @@ public:
         const Map& map);
 
     //--------------------------------------------------
-    // Cleanup
+    // Resource Cleanup
+    //
+    // Releases all dynamically allocated
+    // rendering resources.
+    //
+    // Resources Released:
+    //
+    //      • All Mesh Objects
+    //      • Internal References
     //--------------------------------------------------
 
     void Shutdown();
 
     //--------------------------------------------------
     // Destructor
+    //
+    // Automatically releases rendering
+    // resources before application shutdown.
     //--------------------------------------------------
 
     ~Renderer();

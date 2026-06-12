@@ -1,19 +1,94 @@
+/*
+    ============================================================
+    Map.cpp
+
+    Author: Leonardo Moura
+    Date: 6/12/2026
+
+    Description:
+
+    Implements the battlefield used by the Tank Battle game.
+
+    Responsibilities:
+
+        • Procedural map generation
+        • Tile management
+        • Collision queries
+        • Spawn point management
+        • Destructible environment
+        • Tank collision testing
+
+    Tile Types:
+
+        • Empty
+            Walkable area
+
+        • Breakable
+            Destroyed with one shot
+
+        • Steel
+            Indestructible obstacle
+
+    The map is generated every time the game starts,
+    creating a unique battlefield for each session.
+
+    ============================================================
+*/
+
 #include "Map.h"
 
 #include <cstdlib>
 #include <ctime>
 
+/*
+    Constructor
+
+    Initializes map dimensions and seeds
+    the random number generator used for
+    procedural generation.
+
+    Current Map Size:
+
+        Rows:
+            22
+
+        Columns:
+            40
+
+        Tile Size:
+            32x32 pixels
+
+    Total Playable Area:
+
+        1280 x 704 pixels
+*/
 Map::Map()
 {
     rows = 22;
     columns = 40;
     tileSize = 32;
 
+    //--------------------------------------------------
+    // Initialize random number generator.
+    //
+    // This ensures a different battlefield is
+    // generated each time the game runs.
+    //--------------------------------------------------
+
     std::srand(
         static_cast<unsigned int>(
             std::time(nullptr)));
 }
 
+/*
+    Converts a row and column pair into
+    a one-dimensional array index.
+
+    Formula:
+
+        index =
+            row * columns + column
+*/
 int Map::Index(
     int row,
     int column) const
@@ -22,23 +97,55 @@ int Map::Index(
 }
 
 //--------------------------------------------------
-// Generation
+// Map Generation
 //--------------------------------------------------
 
+/*
+    Removes all tiles from the map.
+
+    Used before generating a new battlefield.
+*/
 void Map::Clear()
 {
     tiles.clear();
 }
 
+/*
+    Generates a new procedural battlefield.
+
+    Generation Steps:
+
+        1. Create empty grid
+        2. Randomly place obstacles
+        3. Create player safe zone
+        4. Create enemy safe zones
+*/
 void Map::Generate()
 {
+    //--------------------------------------------------
+    // Remove previous map data.
+    //--------------------------------------------------
+
     Clear();
+
+    //--------------------------------------------------
+    // Allocate all grid cells.
+    //--------------------------------------------------
 
     tiles.resize(
         rows * columns);
 
     //--------------------------------------------------
-    // Random Generation
+    // Random Tile Generation
+    //
+    // Breakable:
+    //      18%
+    //
+    // Steel:
+    //      7%
+    //
+    // Empty:
+    //      Remaining area
     //--------------------------------------------------
 
     for (int row = 0;
@@ -51,6 +158,11 @@ void Map::Generate()
         {
             Tile tile;
 
+            //--------------------------------------------------
+            // Convert grid coordinates into
+            // world coordinates.
+            //--------------------------------------------------
+
             tile.position =
             {
                 static_cast<float>(
@@ -60,10 +172,18 @@ void Map::Generate()
                     row * tileSize)
             };
 
+            //--------------------------------------------------
+            // Default tile.
+            //--------------------------------------------------
+
             tile.type =
                 TileType::Empty;
 
             tile.health = 0;
+
+            //--------------------------------------------------
+            // Random obstacle generation.
+            //--------------------------------------------------
 
             int random =
                 std::rand() % 100;
@@ -92,7 +212,10 @@ void Map::Generate()
     }
 
     //--------------------------------------------------
-    // Player Area
+    // Player Spawn Zone
+    //
+    // Clears a safe area around the
+    // player starting position.
     //--------------------------------------------------
 
     for (int row = 0;
@@ -117,6 +240,8 @@ void Map::Generate()
     }
 
     //--------------------------------------------------
+    // Enemy Spawn Zone
+    //
     // Top Left Enemy
     //--------------------------------------------------
 
@@ -142,6 +267,8 @@ void Map::Generate()
     }
 
     //--------------------------------------------------
+    // Enemy Spawn Zone
+    //
     // Top Right Enemy
     //--------------------------------------------------
 
@@ -167,6 +294,8 @@ void Map::Generate()
     }
 
     //--------------------------------------------------
+    // Enemy Spawn Zone
+    //
     // Center Enemy
     //--------------------------------------------------
 
@@ -192,6 +321,8 @@ void Map::Generate()
     }
 
     //--------------------------------------------------
+    // Enemy Spawn Zone
+    //
     // Bottom Right Enemy
     //--------------------------------------------------
 
@@ -218,7 +349,9 @@ void Map::Generate()
 }
 
 //--------------------------------------------------
-// Grid
+// Grid Information
+//
+// Provides information about the map layout.
 //--------------------------------------------------
 
 int Map::GetRows() const
@@ -238,6 +371,9 @@ int Map::GetTileSize() const
 
 //--------------------------------------------------
 // Tile Access
+//
+// Allows retrieval of tiles using
+// row/column coordinates.
 //--------------------------------------------------
 
 Tile& Map::GetTile(
@@ -263,9 +399,13 @@ const Tile& Map::GetTile(
 }
 
 //--------------------------------------------------
-// Queries
+// Map Queries
 //--------------------------------------------------
 
+/*
+    Determines whether a world position
+    exists inside the map boundaries.
+*/
 bool Map::IsInsideMap(
     const glm::vec2& position) const
 {
@@ -278,11 +418,27 @@ bool Map::IsInsideMap(
         rows * tileSize;
 }
 
+/*
+    Determines whether a position contains
+    a solid obstacle.
+
+    Returns:
+
+        true
+            Breakable or Steel
+
+        false
+            Empty tile
+*/
 bool Map::IsBlocked(
     const glm::vec2& position) const
 {
     if (!IsInsideMap(position))
     {
+        //--------------------------------------------------
+        // Outside the map is considered blocked.
+        //--------------------------------------------------
+
         return true;
     }
 
@@ -306,6 +462,15 @@ bool Map::IsBlocked(
         TileType::Empty;
 }
 
+/*
+    Applies damage to a tile.
+
+    Breakable:
+        Loses health
+
+    Steel:
+        Ignores damage
+*/
 bool Map::DamageTile(
     const glm::vec2& position)
 {
@@ -329,16 +494,28 @@ bool Map::DamageTile(
             row,
             column);
 
+    //--------------------------------------------------
+    // Steel blocks cannot be damaged.
+    //--------------------------------------------------
+
     if (tile.type ==
         TileType::Steel)
     {
         return false;
     }
 
+    //--------------------------------------------------
+    // Breakable blocks lose health.
+    //--------------------------------------------------
+
     if (tile.type ==
         TileType::Breakable)
     {
         tile.health--;
+
+        //--------------------------------------------------
+        // Remove block when health reaches zero.
+        //--------------------------------------------------
 
         if (tile.health <= 0)
         {
@@ -356,8 +533,14 @@ bool Map::DamageTile(
 
 //--------------------------------------------------
 // Spawn Points
+//
+// Defines where gameplay entities
+// initially appear.
 //--------------------------------------------------
 
+/*
+    Player spawn position.
+*/
 glm::vec2 Map::GetPlayerSpawn() const
 {
     return
@@ -367,6 +550,23 @@ glm::vec2 Map::GetPlayerSpawn() const
     };
 }
 
+/*
+    Enemy spawn positions.
+
+    Distribution:
+
+        Enemy 0:
+            Bottom Left
+
+        Enemy 1:
+            Bottom Right
+
+        Enemy 2:
+            Center
+
+        Enemy 3:
+            Top Right
+*/
 glm::vec2 Map::GetEnemySpawn(
     int index) const
 {
@@ -403,7 +603,13 @@ glm::vec2 Map::GetEnemySpawn(
 }
 
 //--------------------------------------------------
-// Collision
+// Tank Collision Testing
+//
+// Checks whether a tank overlaps
+// any solid tile.
+//
+// Uses the four corners of the tank's
+// bounding box.
 //--------------------------------------------------
 
 bool Map::CheckTankCollision(
@@ -426,6 +632,10 @@ bool Map::CheckTankCollision(
     float top =
         position.y +
         height * 0.5f;
+
+    //--------------------------------------------------
+    // Test all four corners.
+    //--------------------------------------------------
 
     glm::vec2 corners[4] =
     {
@@ -451,7 +661,10 @@ bool Map::CheckTankCollision(
 }
 
 //--------------------------------------------------
-// Tiles
+// Tile Collection Access
+//
+// Provides read-only access to the entire
+// tile array for rendering.
 //--------------------------------------------------
 
 const std::vector<Tile>&
@@ -461,9 +674,12 @@ Map::GetTiles() const
 }
 
 //--------------------------------------------------
-// Tile Helpers
+// Tile Helper Functions
 //--------------------------------------------------
 
+/*
+    Returns true if the tile blocks movement.
+*/
 bool Tile::IsSolid() const
 {
     return
@@ -473,6 +689,9 @@ bool Tile::IsSolid() const
         TileType::Steel;
 }
 
+/*
+    Returns true if the tile can be destroyed.
+*/
 bool Tile::IsBreakable() const
 {
     return
@@ -482,6 +701,9 @@ bool Tile::IsBreakable() const
 
 //--------------------------------------------------
 // Destructor
+//
+// No dynamic memory is owned directly
+// by the Map class.
 //--------------------------------------------------
 
 Map::~Map()

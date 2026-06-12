@@ -1,7 +1,57 @@
+/*
+    ============================================================
+    Bullet.cpp
+
+    Author: Leonardo Moura
+    Date: 6/12/2026
+
+    Description:
+
+    Implements the Bullet class used by both the player
+    and enemy tanks.
+
+    Responsibilities:
+
+        • Store bullet position
+        • Store movement direction
+        • Move using delta time
+        • Track ownership (player or enemy)
+        • Provide collision bounds
+        • Detect when leaving the game area
+        • Manage active/inactive state
+
+    ============================================================
+*/
+
 #include "Bullet.h"
 
 #include <glm.hpp>
 
+/*
+    Constructor
+
+    Initializes a bullet with default values.
+
+    Default State:
+
+        Position:
+            (0,0)
+
+        Direction:
+            Positive X axis
+
+        Speed:
+            500 pixels/second
+
+        Size:
+            8x8 pixels
+
+        Owner:
+            Player
+
+        State:
+            Active
+*/
 Bullet::Bullet()
 {
     position =
@@ -33,7 +83,10 @@ Bullet::Bullet()
 }
 
 //--------------------------------------------------
-// Position
+// Position Management
+//
+// Responsible for storing and retrieving the
+// bullet world position.
 //--------------------------------------------------
 
 void Bullet::SetPosition(
@@ -49,12 +102,23 @@ glm::vec2 Bullet::GetPosition() const
 }
 
 //--------------------------------------------------
-// Direction
+// Direction Management
+//
+// The bullet direction determines the trajectory
+// used during movement.
+//
+// Directions are normalized to ensure bullets
+// always travel at a constant speed regardless
+// of the original vector magnitude.
 //--------------------------------------------------
 
 void Bullet::SetDirection(
     const glm::vec2& newDirection)
 {
+    //--------------------------------------------------
+    // Prevent normalization of a near-zero vector.
+    //--------------------------------------------------
+
     if (
         glm::dot(
             newDirection,
@@ -62,6 +126,10 @@ void Bullet::SetDirection(
         >
         0.0001f)
     {
+        //--------------------------------------------------
+        // Store a normalized direction vector.
+        //--------------------------------------------------
+
         direction =
             glm::normalize(
                 newDirection);
@@ -74,7 +142,10 @@ glm::vec2 Bullet::GetDirection() const
 }
 
 //--------------------------------------------------
-// Speed
+// Speed Management
+//
+// Controls how fast the bullet travels across
+// the battlefield.
 //--------------------------------------------------
 
 void Bullet::SetSpeed(
@@ -90,7 +161,13 @@ float Bullet::GetSpeed() const
 }
 
 //--------------------------------------------------
-// Size
+// Size Management
+//
+// The bullet size is used for:
+//
+//      Rendering
+//      Collision Detection
+//      Bounding Box Calculations
 //--------------------------------------------------
 
 void Bullet::SetSize(
@@ -115,7 +192,16 @@ float Bullet::GetHeight() const
 }
 
 //--------------------------------------------------
-// Ownership
+// Ownership Management
+//
+// Identifies who fired the bullet.
+//
+// true  = Player bullet
+// false = Enemy bullet
+//
+// This information is used to prevent enemies
+// from damaging themselves and to determine
+// valid collision targets.
 //--------------------------------------------------
 
 void Bullet::SetFromPlayer(
@@ -131,7 +217,12 @@ bool Bullet::IsFromPlayer() const
 }
 
 //--------------------------------------------------
-// State
+// State Management
+//
+// Active bullets are updated, rendered and
+// checked for collisions.
+//
+// Inactive bullets are removed from the game.
 //--------------------------------------------------
 
 bool Bullet::IsActive() const
@@ -146,7 +237,12 @@ void Bullet::Deactivate()
 }
 
 //--------------------------------------------------
-// Bounds
+// Collision Bounds
+//
+// Returns the minimum corner of the bullet's
+// axis-aligned bounding box (AABB).
+//
+// Used for collision detection.
 //--------------------------------------------------
 
 glm::vec2 Bullet::GetMinBounds() const
@@ -161,6 +257,13 @@ glm::vec2 Bullet::GetMinBounds() const
     };
 }
 
+//--------------------------------------------------
+// Returns the maximum corner of the bullet's
+// axis-aligned bounding box (AABB).
+//
+// Used for collision detection.
+//--------------------------------------------------
+
 glm::vec2 Bullet::GetMaxBounds() const
 {
     return
@@ -174,7 +277,17 @@ glm::vec2 Bullet::GetMaxBounds() const
 }
 
 //--------------------------------------------------
-// Update
+// Bullet Update
+//
+// Moves the projectile according to:
+//
+//      Position +=
+//          Direction *
+//          Speed *
+//          DeltaTime
+//
+// Delta time ensures frame-rate independent
+// movement.
 //--------------------------------------------------
 
 void Bullet::Update(
@@ -187,18 +300,36 @@ void Bullet::Update(
 }
 
 //--------------------------------------------------
-// Screen Test
+// Screen Boundary Test
+//
+// Determines whether the bullet has left the
+// playable area.
+//
+// Bullets outside the game window are removed
+// to avoid unnecessary processing.
 //--------------------------------------------------
 
 bool Bullet::IsOutsideScreen(
     int screenWidth,
     int screenHeight) const
 {
+    //--------------------------------------------------
+    // Left border.
+    //--------------------------------------------------
+
     if (position.x < 0.0f)
         return true;
 
+    //--------------------------------------------------
+    // Bottom border.
+    //--------------------------------------------------
+
     if (position.y < 0.0f)
         return true;
+
+    //--------------------------------------------------
+    // Right border.
+    //--------------------------------------------------
 
     if (
         position.x >
@@ -208,6 +339,10 @@ bool Bullet::IsOutsideScreen(
         return true;
     }
 
+    //--------------------------------------------------
+    // Top border.
+    //--------------------------------------------------
+
     if (
         position.y >
         static_cast<float>(
@@ -216,11 +351,17 @@ bool Bullet::IsOutsideScreen(
         return true;
     }
 
+    //--------------------------------------------------
+    // Bullet remains inside the playable area.
+    //--------------------------------------------------
+
     return false;
 }
 
 //--------------------------------------------------
 // Destructor
+//
+// No dynamic memory is allocated by this class.
 //--------------------------------------------------
 
 Bullet::~Bullet()

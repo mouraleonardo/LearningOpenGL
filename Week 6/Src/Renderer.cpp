@@ -1,3 +1,46 @@
+/*
+    ============================================================
+    Renderer.cpp
+
+    Author: Leonardo Moura
+    Date: 6/12/2026
+
+    Description:
+
+    Implements the rendering subsystem for the
+    Tank Battle game.
+
+    Responsibilities:
+
+        • Create renderable meshes
+        • Configure orthographic projection
+        • Render tanks
+        • Render bullets
+        • Render map tiles
+        • Manage GPU rendering state
+        • Release rendering resources
+
+    Rendering Pipeline:
+
+        Game Objects
+              ↓
+        Model Matrix
+              ↓
+        View Matrix
+              ↓
+        Projection Matrix
+              ↓
+        MVP Matrix
+              ↓
+        Vertex Shader
+              ↓
+        Fragment Shader
+              ↓
+        Screen
+
+    ============================================================
+*/
+
 #include "Renderer.h"
 
 #include <vector>
@@ -8,6 +51,14 @@
 
 namespace
 {
+    /*
+        Creates a single colored triangle and
+        appends it to the vertex array.
+
+        Vertex Format:
+
+            x y z r g b
+    */
     void AddTriangle(
         std::vector<float>& vertices,
 
@@ -28,6 +79,17 @@ namespace
             });
     }
 
+    /*
+        Creates a colored rectangle using
+        two triangles.
+
+        Used to build:
+
+            • Tank bodies
+            • Tank turrets
+            • Bullets
+            • Map blocks
+    */
     std::vector<float> CreateRectangle(
         float width,
         float height,
@@ -44,6 +106,10 @@ namespace
         float hh =
             height * 0.5f;
 
+        //--------------------------------------------------
+        // Triangle 1
+        //--------------------------------------------------
+
         AddTriangle(
             vertices,
 
@@ -52,6 +118,10 @@ namespace
             hw, hh,
 
             r, g, b);
+
+        //--------------------------------------------------
+        // Triangle 2
+        //--------------------------------------------------
 
         AddTriangle(
             vertices,
@@ -66,6 +136,12 @@ namespace
     }
 }
 
+/*
+    Constructor
+
+    Initializes all rendering pointers and
+    OpenGL related variables.
+*/
 Renderer::Renderer()
 {
     shader = nullptr;
@@ -84,8 +160,23 @@ Renderer::Renderer()
     steelMesh = nullptr;
 }
 
+/*
+    Initializes the rendering system.
+
+    Creates all meshes required by the game.
+*/
 bool Renderer::Initialize()
 {
+    //--------------------------------------------------
+    // Create orthographic projection.
+    //
+    // Origin:
+    //      Bottom Left
+    //
+    // Resolution:
+    //      1280 x 720
+    //--------------------------------------------------
+
     projection =
         glm::ortho(
             0.0f,
@@ -95,11 +186,17 @@ bool Renderer::Initialize()
             -1.0f,
             1.0f);
 
+    //--------------------------------------------------
+    // Identity view matrix.
+    //
+    // No camera movement currently exists.
+    //--------------------------------------------------
+
     view =
         glm::mat4(1.0f);
 
     //--------------------------------------------------
-    // Player
+    // Player Tank Meshes
     //--------------------------------------------------
 
     playerBodyMesh =
@@ -123,7 +220,7 @@ bool Renderer::Initialize()
                 0.2f));
 
     //--------------------------------------------------
-    // Enemy
+    // Enemy Tank Meshes
     //--------------------------------------------------
 
     enemyBodyMesh =
@@ -147,7 +244,7 @@ bool Renderer::Initialize()
                 0.2f));
 
     //--------------------------------------------------
-    // Bullet
+    // Bullet Mesh
     //--------------------------------------------------
 
     bulletMesh =
@@ -161,7 +258,7 @@ bool Renderer::Initialize()
                 0.0f));
 
     //--------------------------------------------------
-    // Brick
+    // Breakable Block Mesh
     //--------------------------------------------------
 
     brickMesh =
@@ -175,7 +272,7 @@ bool Renderer::Initialize()
                 0.07f));
 
     //--------------------------------------------------
-    // Steel
+    // Steel Block Mesh
     //--------------------------------------------------
 
     steelMesh =
@@ -191,6 +288,12 @@ bool Renderer::Initialize()
     return true;
 }
 
+/*
+    Associates a shader program with the renderer.
+
+    Also retrieves the MVP matrix uniform
+    location from the shader.
+*/
 void Renderer::SetShader(
     Shader* shaderProgram)
 {
@@ -207,8 +310,18 @@ void Renderer::SetShader(
     }
 }
 
+/*
+    Begins a new rendering frame.
+
+    Clears the screen and activates
+    the shader program.
+*/
 void Renderer::BeginFrame()
 {
+    //--------------------------------------------------
+    // Clear screen to black.
+    //--------------------------------------------------
+
     glClearColor(
         0.0f,
         0.0f,
@@ -218,16 +331,43 @@ void Renderer::BeginFrame()
     glClear(
         GL_COLOR_BUFFER_BIT);
 
+    //--------------------------------------------------
+    // Activate shader program.
+    //--------------------------------------------------
+
     if (shader)
     {
         shader->Use();
     }
 }
 
+/*
+    EndFrame
+
+    Reserved for future rendering operations.
+
+    Examples:
+
+        • Post processing
+        • UI rendering
+        • Particle effects
+*/
 void Renderer::EndFrame()
 {
 }
 
+/*
+    Draws a mesh using the supplied model matrix.
+
+    Computes:
+
+        MVP =
+            Projection
+            *
+            View
+            *
+            Model
+*/
 void Renderer::DrawMesh(
     Mesh* mesh,
     const glm::mat4& model)
@@ -242,6 +382,10 @@ void Renderer::DrawMesh(
         view *
         model;
 
+    //--------------------------------------------------
+    // Send MVP matrix to shader.
+    //--------------------------------------------------
+
     glUniformMatrix4fv(
         mvpLocation,
         1,
@@ -252,6 +396,16 @@ void Renderer::DrawMesh(
     mesh->Draw();
 }
 
+/*
+    Draws a tank.
+
+    The tank is composed of:
+
+        • Body
+        • Turret
+
+    Both rotate together.
+*/
 void Renderer::DrawTank(
     const Tank& tank,
     Mesh* bodyMesh,
@@ -262,6 +416,10 @@ void Renderer::DrawTank(
 
     float rotation =
         tank.GetRotation();
+
+    //--------------------------------------------------
+    // Tank Body
+    //--------------------------------------------------
 
     glm::mat4 bodyModel =
         glm::translate(
@@ -284,6 +442,10 @@ void Renderer::DrawTank(
         bodyMesh,
         bodyModel);
 
+    //--------------------------------------------------
+    // Tank Turret
+    //--------------------------------------------------
+
     glm::mat4 turretModel =
         glm::translate(
             glm::mat4(1.0f),
@@ -301,6 +463,10 @@ void Renderer::DrawTank(
                 0.0f,
                 1.0f));
 
+    //--------------------------------------------------
+    // Move turret slightly forward.
+    //--------------------------------------------------
+
     turretModel =
         glm::translate(
             turretModel,
@@ -314,6 +480,9 @@ void Renderer::DrawTank(
         turretModel);
 }
 
+/*
+    Draws a projectile.
+*/
 void Renderer::DrawBullet(
     const Bullet& bullet)
 {
@@ -333,6 +502,14 @@ void Renderer::DrawBullet(
         model);
 }
 
+/*
+    Draws a map tile.
+
+    Tile Types:
+
+        • Breakable
+        • Steel
+*/
 void Renderer::DrawTile(
     const Tile& tile)
 {
@@ -358,6 +535,11 @@ void Renderer::DrawTile(
         return;
     }
 
+    //--------------------------------------------------
+    // Convert tile corner position into
+    // tile center position.
+    //--------------------------------------------------
+
     glm::mat4 model =
         glm::translate(
             glm::mat4(1.0f),
@@ -371,6 +553,9 @@ void Renderer::DrawTile(
         model);
 }
 
+/*
+    Draws the player tank.
+*/
 void Renderer::RenderPlayer(
     const Tank& player)
 {
@@ -385,6 +570,9 @@ void Renderer::RenderPlayer(
         playerTurretMesh);
 }
 
+/*
+    Draws all active enemy tanks.
+*/
 void Renderer::RenderEnemies(
     const std::vector<Enemy>& enemies)
 {
@@ -402,6 +590,9 @@ void Renderer::RenderEnemies(
     }
 }
 
+/*
+    Draws all active bullets.
+*/
 void Renderer::RenderBullets(
     const std::vector<Bullet>& bullets)
 {
@@ -417,6 +608,9 @@ void Renderer::RenderBullets(
     }
 }
 
+/*
+    Draws every tile in the map.
+*/
 void Renderer::RenderMap(
     const Map& map)
 {
@@ -430,6 +624,9 @@ void Renderer::RenderMap(
     }
 }
 
+/*
+    Releases all dynamically allocated meshes.
+*/
 void Renderer::Shutdown()
 {
     delete playerBodyMesh;
@@ -454,6 +651,12 @@ void Renderer::Shutdown()
     steelMesh = nullptr;
 }
 
+/*
+    Destructor
+
+    Ensures all rendering resources
+    are properly released.
+*/
 Renderer::~Renderer()
 {
     Shutdown();

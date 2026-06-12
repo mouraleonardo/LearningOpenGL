@@ -1,7 +1,47 @@
+/*
+    ============================================================
+    Game.cpp
+
+    Author: Leonardo Moura
+    Date: 6/12/2026
+
+    Description:
+
+    Implements the central game controller.
+
+    The Game class coordinates all gameplay systems:
+
+        • Player management
+        • Enemy management
+        • Projectile management
+        • Collision detection
+        • Map generation
+        • Input processing
+        • Rendering
+        • Object cleanup
+
+    This file acts as the bridge between the
+    gameplay systems and the rendering engine.
+
+    ============================================================
+*/
+
 #include "Game.h"
 
 #include <algorithm>
 
+/*
+    Constructor
+
+    Stores references to the game window and
+    screen dimensions.
+
+    These values are later used for:
+
+        • Input processing
+        • Boundary checks
+        • Rendering limits
+*/
 Game::Game(
     GLFWwindow* window,
     int width,
@@ -18,21 +58,46 @@ Game::Game(
 }
 
 //--------------------------------------------------
-// Initialize
+// Game Initialization
+//
+// Initializes all major systems:
+//
+//      Renderer
+//      Map
+//      Player
+//      Enemies
+//
+// Returns true when initialization succeeds.
 //--------------------------------------------------
 
 bool Game::Initialize(
     Shader* shader)
 {
+    //--------------------------------------------------
+    // Initialize rendering subsystem.
+    //--------------------------------------------------
+
     if (!renderer.Initialize())
     {
         return false;
     }
 
+    //--------------------------------------------------
+    // Attach shader program to renderer.
+    //--------------------------------------------------
+
     renderer.SetShader(
         shader);
 
+    //--------------------------------------------------
+    // Generate a procedural map.
+    //--------------------------------------------------
+
     map.Generate();
+
+    //--------------------------------------------------
+    // Spawn gameplay entities.
+    //--------------------------------------------------
 
     SpawnPlayer();
 
@@ -42,7 +107,17 @@ bool Game::Initialize(
 }
 
 //--------------------------------------------------
-// Spawn Player
+// Player Spawn
+//
+// Creates the player tank using values
+// provided by the map.
+//
+// Initial configuration:
+//
+//      Position
+//      Rotation
+//      Speed
+//      Size
 //--------------------------------------------------
 
 void Game::SpawnPlayer()
@@ -65,7 +140,14 @@ void Game::SpawnPlayer()
 }
 
 //--------------------------------------------------
-// Spawn Enemies
+// Enemy Spawn
+//
+// Creates all enemy tanks and places them
+// at predefined spawn positions.
+//
+// Current level configuration:
+//
+//      4 Enemy Tanks
 //--------------------------------------------------
 
 void Game::SpawnEnemies()
@@ -97,7 +179,9 @@ void Game::SpawnEnemies()
 }
 
 //--------------------------------------------------
-// Input
+// Input Processing
+//
+// Delegates player input handling.
 //--------------------------------------------------
 
 void Game::ProcessInput(
@@ -109,15 +193,37 @@ void Game::ProcessInput(
 
 //--------------------------------------------------
 // Player Input
+//
+// Handles:
+//
+//      W / S
+//          Forward / Backward
+//
+//      A / D
+//          Rotation
+//
+//      Arrow Keys
+//          Alternative controls
+//
+//      Space
+//          Fire projectile
 //--------------------------------------------------
 
 void Game::HandlePlayerInput(
     float deltaTime)
 {
+    //--------------------------------------------------
+    // Dead players cannot move.
+    //--------------------------------------------------
+
     if (!player.IsAlive())
     {
         return;
     }
+
+    //--------------------------------------------------
+    // Rotate Left
+    //--------------------------------------------------
 
     if (
         glfwGetKey(
@@ -133,6 +239,10 @@ void Game::HandlePlayerInput(
         player.RotateLeft(
             deltaTime);
     }
+
+    //--------------------------------------------------
+    // Rotate Right
+    //--------------------------------------------------
 
     if (
         glfwGetKey(
@@ -152,6 +262,10 @@ void Game::HandlePlayerInput(
     glm::vec2 oldPosition =
         player.GetPosition();
 
+    //--------------------------------------------------
+    // Forward Movement
+    //--------------------------------------------------
+
     if (
         glfwGetKey(
             window,
@@ -166,6 +280,10 @@ void Game::HandlePlayerInput(
         player.MoveForward(
             deltaTime);
 
+        //--------------------------------------------------
+        // Revert movement if collision occurs.
+        //--------------------------------------------------
+
         if (
             map.CheckTankCollision(
                 player.GetPosition(),
@@ -176,6 +294,10 @@ void Game::HandlePlayerInput(
                 oldPosition);
         }
     }
+
+    //--------------------------------------------------
+    // Backward Movement
+    //--------------------------------------------------
 
     oldPosition =
         player.GetPosition();
@@ -205,6 +327,10 @@ void Game::HandlePlayerInput(
         }
     }
 
+    //--------------------------------------------------
+    // Fire projectile once per key press.
+    //--------------------------------------------------
+
     static bool previousSpace =
         false;
 
@@ -220,8 +346,17 @@ void Game::HandlePlayerInput(
     {
         Bullet bullet;
 
+        //--------------------------------------------------
+        // Spawn bullet at player position.
+        //--------------------------------------------------
+
         bullet.SetPosition(
             player.GetPosition());
+
+        //--------------------------------------------------
+        // Shoot in the direction the tank
+        // is currently facing.
+        //--------------------------------------------------
 
         bullet.SetDirection(
             player.GetForwardVector());
@@ -241,7 +376,9 @@ void Game::HandlePlayerInput(
 }
 
 //--------------------------------------------------
-// Update
+// Main Game Update
+//
+// Updates all active systems every frame.
 //--------------------------------------------------
 
 void Game::Update(
@@ -262,7 +399,10 @@ void Game::Update(
 }
 
 //--------------------------------------------------
-// Player
+// Player Update
+//
+// Updates player logic and prevents the
+// tank from leaving the playable area.
 //--------------------------------------------------
 
 void Game::UpdatePlayer(
@@ -273,6 +413,10 @@ void Game::UpdatePlayer(
 
     glm::vec2 position =
         player.GetPosition();
+
+    //--------------------------------------------------
+    // Clamp player position to screen bounds.
+    //--------------------------------------------------
 
     position.x =
         std::clamp(
@@ -293,7 +437,14 @@ void Game::UpdatePlayer(
 }
 
 //--------------------------------------------------
-// Enemies
+// Enemy Update
+//
+// Responsibilities:
+//
+//      AI updates
+//      Wall avoidance
+//      Boundary handling
+//      Shooting behavior
 //--------------------------------------------------
 
 void Game::UpdateEnemies(
@@ -306,17 +457,26 @@ void Game::UpdateEnemies(
             continue;
         }
 
+        //--------------------------------------------------
+        // Continuously track player position.
+        //--------------------------------------------------
+
         enemy.SetTargetPosition(
             player.GetPosition());
 
         glm::vec2 oldPosition =
             enemy.GetPosition();
 
+        //--------------------------------------------------
+        // Execute AI behavior.
+        //--------------------------------------------------
+
         enemy.Update(
             deltaTime);
 
         //--------------------------------------------------
-        // Collision With Walls
+        // Prevent enemies from moving through
+        // map obstacles.
         //--------------------------------------------------
 
         if (
@@ -332,7 +492,7 @@ void Game::UpdateEnemies(
         }
 
         //--------------------------------------------------
-        // Screen Limits
+        // Screen boundary handling.
         //--------------------------------------------------
 
         glm::vec2 position =
@@ -378,13 +538,18 @@ void Game::UpdateEnemies(
         enemy.SetPosition(
             position);
 
+        //--------------------------------------------------
+        // Change patrol direction if a border
+        // is reached.
+        //--------------------------------------------------
+
         if (hitBorder)
         {
             enemy.ChooseNewPatrolDirection();
         }
 
         //--------------------------------------------------
-        // Shooting
+        // Enemy Shooting Logic
         //--------------------------------------------------
 
         if (
@@ -419,7 +584,16 @@ void Game::UpdateEnemies(
 }
 
 //--------------------------------------------------
-// Bullets
+// Bullet Update
+//
+// Updates all active projectiles.
+//
+// Responsibilities:
+//
+//      Movement
+//      Boundary checks
+//      Block collisions
+//      Block destruction
 //--------------------------------------------------
 
 void Game::UpdateBullets(
@@ -427,13 +601,27 @@ void Game::UpdateBullets(
 {
     for (Bullet& bullet : bullets)
     {
+        //--------------------------------------------------
+        // Skip inactive projectiles.
+        //--------------------------------------------------
+
         if (!bullet.IsActive())
         {
             continue;
         }
 
+        //--------------------------------------------------
+        // Move projectile using its direction,
+        // speed and delta time.
+        //--------------------------------------------------
+
         bullet.Update(
             deltaTime);
+
+        //--------------------------------------------------
+        // Remove bullets that leave the
+        // playable area.
+        //--------------------------------------------------
 
         if (
             bullet.IsOutsideScreen(
@@ -444,23 +632,51 @@ void Game::UpdateBullets(
             continue;
         }
 
+        //--------------------------------------------------
+        // Check collision against map blocks.
+        //--------------------------------------------------
+
         if (
             map.IsBlocked(
                 bullet.GetPosition()))
         {
+            //--------------------------------------------------
+            // Damage breakable blocks.
+            //
+            // Steel blocks remain intact.
+            //--------------------------------------------------
+
             map.DamageTile(
                 bullet.GetPosition());
+
+            //--------------------------------------------------
+            // Destroy projectile after impact.
+            //--------------------------------------------------
 
             bullet.Deactivate();
         }
     }
 }
+
 //--------------------------------------------------
-// Collision
+// Collision Detection
+//
+// Handles:
+//
+//      Player bullets -> Enemies
+//
+//      Enemy bullets -> Player
+//
+// Uses Axis-Aligned Bounding Box (AABB)
+// collision detection.
 //--------------------------------------------------
 
 void Game::CheckCollisions()
 {
+    //--------------------------------------------------
+    // Check every active projectile.
+    //--------------------------------------------------
+
     for (Bullet& bullet : bullets)
     {
         if (!bullet.IsActive())
@@ -469,17 +685,25 @@ void Game::CheckCollisions()
         }
 
         //--------------------------------------------------
-        // Enemy Hit
+        // Player Bullet vs Enemy
         //--------------------------------------------------
 
         if (bullet.IsFromPlayer())
         {
             for (Enemy& enemy : enemies)
             {
+                //--------------------------------------------------
+                // Ignore dead enemies.
+                //--------------------------------------------------
+
                 if (!enemy.IsAlive())
                 {
                     continue;
                 }
+
+                //--------------------------------------------------
+                // Retrieve bullet bounding box.
+                //--------------------------------------------------
 
                 glm::vec2 bulletMin =
                     bullet.GetMinBounds();
@@ -487,17 +711,29 @@ void Game::CheckCollisions()
                 glm::vec2 bulletMax =
                     bullet.GetMaxBounds();
 
+                //--------------------------------------------------
+                // Retrieve enemy bounding box.
+                //--------------------------------------------------
+
                 glm::vec2 enemyMin =
                     enemy.GetMinBounds();
 
                 glm::vec2 enemyMax =
                     enemy.GetMaxBounds();
 
+                //--------------------------------------------------
+                // Perform AABB overlap test.
+                //--------------------------------------------------
+
                 bool overlap =
                     bulletMin.x < enemyMax.x &&
                     bulletMax.x > enemyMin.x &&
                     bulletMin.y < enemyMax.y &&
                     bulletMax.y > enemyMin.y;
+
+                //--------------------------------------------------
+                // Destroy enemy if hit.
+                //--------------------------------------------------
 
                 if (overlap)
                 {
@@ -511,16 +747,24 @@ void Game::CheckCollisions()
         }
 
         //--------------------------------------------------
-        // Player Hit
+        // Enemy Bullet vs Player
         //--------------------------------------------------
 
         else
         {
+            //--------------------------------------------------
+            // Retrieve bullet bounds.
+            //--------------------------------------------------
+
             glm::vec2 bulletMin =
                 bullet.GetMinBounds();
 
             glm::vec2 bulletMax =
                 bullet.GetMaxBounds();
+
+            //--------------------------------------------------
+            // Retrieve player bounds.
+            //--------------------------------------------------
 
             glm::vec2 playerMin =
                 player.GetMinBounds();
@@ -528,11 +772,19 @@ void Game::CheckCollisions()
             glm::vec2 playerMax =
                 player.GetMaxBounds();
 
+            //--------------------------------------------------
+            // Perform overlap test.
+            //--------------------------------------------------
+
             bool overlap =
                 bulletMin.x < playerMax.x &&
                 bulletMax.x > playerMin.x &&
                 bulletMin.y < playerMax.y &&
                 bulletMax.y > playerMin.y;
+
+            //--------------------------------------------------
+            // Destroy player if hit.
+            //--------------------------------------------------
 
             if (overlap)
             {
@@ -545,11 +797,25 @@ void Game::CheckCollisions()
 }
 
 //--------------------------------------------------
-// Cleanup
+// Object Cleanup
+//
+// Removes destroyed objects from the game.
+//
+// This prevents inactive entities from
+// consuming memory and processing time.
+//
+// Objects Removed:
+//
+//      Destroyed Bullets
+//      Destroyed Enemies
 //--------------------------------------------------
 
 void Game::RemoveDestroyedObjects()
 {
+    //--------------------------------------------------
+    // Remove inactive bullets.
+    //--------------------------------------------------
+
     bullets.erase(
         std::remove_if(
             bullets.begin(),
@@ -562,6 +828,10 @@ void Game::RemoveDestroyedObjects()
             }),
 
         bullets.end());
+
+    //--------------------------------------------------
+    // Remove destroyed enemies.
+    //--------------------------------------------------
 
     enemies.erase(
         std::remove_if(
@@ -578,43 +848,106 @@ void Game::RemoveDestroyedObjects()
 }
 
 //--------------------------------------------------
-// Render
+// Rendering
+//
+// Draws the entire game world.
+//
+// Draw Order:
+//
+//      1. Map
+//      2. Player
+//      3. Enemies
+//      4. Bullets
+//
+// Maintaining a consistent draw order
+// ensures proper visual layering.
 //--------------------------------------------------
 
 void Game::Render()
 {
+    //--------------------------------------------------
+    // Prepare rendering frame.
+    //--------------------------------------------------
+
     renderer.BeginFrame();
+
+    //--------------------------------------------------
+    // Draw map tiles.
+    //--------------------------------------------------
 
     renderer.RenderMap(
         map);
 
+    //--------------------------------------------------
+    // Draw player tank.
+    //--------------------------------------------------
+
     renderer.RenderPlayer(
         player);
+
+    //--------------------------------------------------
+    // Draw enemy tanks.
+    //--------------------------------------------------
 
     renderer.RenderEnemies(
         enemies);
 
+    //--------------------------------------------------
+    // Draw active projectiles.
+    //--------------------------------------------------
+
     renderer.RenderBullets(
         bullets);
+
+    //--------------------------------------------------
+    // Finalize rendering operations.
+    //--------------------------------------------------
 
     renderer.EndFrame();
 }
 
 //--------------------------------------------------
 // Shutdown
+//
+// Releases all game resources.
+//
+// This function is called before the
+// application terminates.
 //--------------------------------------------------
 
 void Game::Shutdown()
 {
+    //--------------------------------------------------
+    // Shutdown rendering subsystem.
+    //--------------------------------------------------
+
     renderer.Shutdown();
 
+    //--------------------------------------------------
+    // Remove all active projectiles.
+    //--------------------------------------------------
+
     bullets.clear();
+
+    //--------------------------------------------------
+    // Remove all active enemies.
+    //--------------------------------------------------
 
     enemies.clear();
 }
 
 //--------------------------------------------------
 // Accessors
+//
+// Provides controlled access to the
+// internal game systems.
+//
+// Useful for:
+//
+//      Debugging
+//      Future UI systems
+//      Level management
+//      Boss systems
 //--------------------------------------------------
 
 Tank& Game::GetPlayer()
