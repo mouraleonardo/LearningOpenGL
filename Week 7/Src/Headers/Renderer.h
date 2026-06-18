@@ -44,11 +44,29 @@ private:
 
     Mesh* groundMesh;
 
+    //--------------------------------------------------
+    // Tree Meshes
+    //--------------------------------------------------
+
     Mesh* trunkMesh;
 
     Mesh* leavesMesh;
 
+    //--------------------------------------------------
+    // Door Mesh
+    //--------------------------------------------------
+
     Mesh* doorMesh;
+
+    //--------------------------------------------------
+    // Castle Meshes
+    //--------------------------------------------------
+
+    Mesh* castleWallMesh;
+
+    Mesh* castleTowerMesh;
+
+    Mesh* castleRoofMesh;
 
 private:
 
@@ -61,8 +79,16 @@ private:
         const glm::mat4& model,
         const glm::mat4& view);
 
+    //--------------------------------------------------
+    // Terrain
+    //--------------------------------------------------
+
     void DrawGround(
         const glm::mat4& view);
+
+    //--------------------------------------------------
+    // Environment
+    //--------------------------------------------------
 
     void DrawTree(
         const Tree& tree,
@@ -70,6 +96,10 @@ private:
 
     void DrawDoor(
         const Door& door,
+        const glm::mat4& view);
+
+    void DrawCastle(
+        const World& world,
         const glm::mat4& view);
 
 public:

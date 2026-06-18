@@ -38,6 +38,34 @@ private:
 
     float mouseSensitivity;
 
+    //--------------------------------------------------
+    // Sprint
+    //--------------------------------------------------
+
+    float walkSpeed;
+
+    float sprintSpeed;
+
+    //--------------------------------------------------
+    // Physics
+    //--------------------------------------------------
+
+    float verticalVelocity;
+
+    float gravity;
+
+    float jumpForce;
+
+    bool grounded;
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    float playerRadius;
+
+    float playerHeight;
+
 private:
 
     //--------------------------------------------------
@@ -88,13 +116,13 @@ public:
     glm::vec3 GetUp() const;
 
     //--------------------------------------------------
-    // Camera Matrix
+    // View Matrix
     //--------------------------------------------------
 
     glm::mat4 GetViewMatrix() const;
 
     //--------------------------------------------------
-    // Movement
+    // Horizontal Movement
     //--------------------------------------------------
 
     void MoveForward(
@@ -118,13 +146,79 @@ public:
         float yOffset);
 
     //--------------------------------------------------
-    // Speed
+    // Physics
+    //--------------------------------------------------
+
+    void ApplyGravity(
+        float deltaTime);
+
+    void Jump();
+
+    void Land(
+        float groundHeight);
+
+    float GetVerticalVelocity() const;
+
+    bool IsGrounded() const;
+
+    //--------------------------------------------------
+    // Physics Settings
+    //--------------------------------------------------
+
+    void SetGravity(
+        float value);
+
+    float GetGravity() const;
+
+    void SetJumpForce(
+        float value);
+
+    float GetJumpForce() const;
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    void SetPlayerRadius(
+        float radius);
+
+    float GetPlayerRadius() const;
+
+    void SetPlayerHeight(
+        float height);
+
+    float GetPlayerHeight() const;
+
+    //--------------------------------------------------
+    // Movement Speed
     //--------------------------------------------------
 
     void SetMovementSpeed(
         float speed);
 
     float GetMovementSpeed() const;
+
+    //--------------------------------------------------
+    // Sprint
+    //--------------------------------------------------
+
+    void SetWalkSpeed(
+        float speed);
+
+    float GetWalkSpeed() const;
+
+    void SetSprintSpeed(
+        float speed);
+
+    float GetSprintSpeed() const;
+
+    void StartSprint();
+
+    void StopSprint();
+
+    //--------------------------------------------------
+    // Mouse Sensitivity
+    //--------------------------------------------------
 
     void SetMouseSensitivity(
         float sensitivity);

@@ -11,18 +11,26 @@ World::World()
     // Terrain
     //--------------------------------------------------
 
-    terrainWidth =
-        50.0f;
-
-    terrainDepth =
-        50.0f;
+    terrainSize =
+        500.0f;
 
     //--------------------------------------------------
-    // Collision
+    // Castle
+    //--------------------------------------------------
+
+    castlePosition =
+    {
+        80.0f,
+        0.0f,
+        80.0f
+    };
+
+    //--------------------------------------------------
+    // Player Collision
     //--------------------------------------------------
 
     playerRadius =
-        0.5f;
+        0.4f;
 
     //--------------------------------------------------
     // Random Seed
@@ -43,7 +51,7 @@ void World::Generate()
 
     GenerateTrees();
 
-    GenerateDoor();
+    GenerateCastle();
 }
 
 void World::Clear()
@@ -56,24 +64,29 @@ void World::Clear()
 //--------------------------------------------------
 
 void World::SetTerrainSize(
-    float width,
-    float depth)
+    float size)
 {
-    terrainWidth =
-        width;
-
-    terrainDepth =
-        depth;
+    terrainSize =
+        size;
 }
 
-float World::GetTerrainWidth() const
+float World::GetTerrainSize() const
 {
-    return terrainWidth;
+    return terrainSize;
 }
 
-float World::GetTerrainDepth() const
+//--------------------------------------------------
+// Terrain Height
+//--------------------------------------------------
+
+float World::GetHeightAt(
+    float x,
+    float z) const
 {
-    return terrainDepth;
+    (void)x;
+    (void)z;
+
+    return 0.0f;
 }
 
 //--------------------------------------------------
@@ -93,6 +106,15 @@ World::GetTrees() const
 }
 
 //--------------------------------------------------
+// Castle
+//--------------------------------------------------
+
+glm::vec3 World::GetCastlePosition() const
+{
+    return castlePosition;
+}
+
+//--------------------------------------------------
 // Door
 //--------------------------------------------------
 
@@ -107,7 +129,7 @@ const Door& World::GetDoor() const
 }
 
 //--------------------------------------------------
-// Collision
+// Player Collision
 //--------------------------------------------------
 
 void World::SetPlayerRadius(
@@ -121,6 +143,9 @@ float World::GetPlayerRadius() const
 {
     return playerRadius;
 }
+//--------------------------------------------------
+// Tree Collision
+//--------------------------------------------------
 
 bool World::CheckTreeCollision(
     const glm::vec3& position) const
@@ -139,44 +164,268 @@ bool World::CheckTreeCollision(
     return false;
 }
 
-bool World::CheckWorldBounds(
+//--------------------------------------------------
+// Door Collision
+//--------------------------------------------------
+
+bool World::CheckDoorCollision(
     const glm::vec3& position) const
 {
-    float halfWidth =
-        terrainWidth * 0.5f;
+    return
+        door.CheckCollision(
+            position,
+            playerRadius);
+}
 
-    float halfDepth =
-        terrainDepth * 0.5f;
+//--------------------------------------------------
+// Castle Interior
+//--------------------------------------------------
 
-    if (
-        position.x <
-        -halfWidth)
-    {
-        return false;
-    }
+bool World::IsInsideCastle(
+    const glm::vec3& position) const
+{
+    float minX =
+        castlePosition.x - 7.0f;
 
-    if (
+    float maxX =
+        castlePosition.x + 7.0f;
+
+    float minZ =
+        castlePosition.z - 5.0f;
+
+    float maxZ =
+        castlePosition.z + 5.0f;
+
+    return
+        position.x > minX &&
+        position.x < maxX &&
+        position.z > minZ &&
+        position.z < maxZ;
+}
+
+//--------------------------------------------------
+// Castle Collision
+//--------------------------------------------------
+
+bool World::CheckCastleCollision(
+    const glm::vec3& position) const
+{
+    const float halfWidth =
+        8.0f;
+
+    const float halfDepth =
+        6.0f;
+
+    const float wallThickness =
+        0.5f;
+
+    //--------------------------------------------------
+    // Front Wall
+    //--------------------------------------------------
+
+    bool insideFrontWall =
         position.x >
-        halfWidth)
-    {
-        return false;
-    }
+        castlePosition.x - halfWidth
 
-    if (
-        position.z <
-        -halfDepth)
-    {
-        return false;
-    }
+        &&
 
-    if (
+        position.x <
+        castlePosition.x + halfWidth
+
+        &&
+
         position.z >
-        halfDepth)
+        castlePosition.z -
+        halfDepth -
+        wallThickness
+
+        &&
+
+        position.z <
+        castlePosition.z -
+        halfDepth +
+        wallThickness;
+
+    //--------------------------------------------------
+    // Door Opening
+    //--------------------------------------------------
+
+    bool insideDoorGap =
+        position.x >
+        castlePosition.x - 1.8f
+
+        &&
+
+        position.x <
+        castlePosition.x + 1.8f;
+    //--------------------------------------------------
+// Door Closed
+//--------------------------------------------------
+
+    if (
+        door.GetCurrentAngle()
+        <
+        70.0f)
     {
-        return false;
+        if (
+            insideFrontWall)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        if (
+            insideFrontWall
+            &&
+            !insideDoorGap)
+        {
+            return true;
+        }
     }
 
-    return true;
+    //--------------------------------------------------
+    // Back Wall
+    //--------------------------------------------------
+
+    bool insideBackWall =
+        position.x >
+        castlePosition.x - halfWidth
+
+        &&
+
+        position.x <
+        castlePosition.x + halfWidth
+
+        &&
+
+        position.z >
+        castlePosition.z +
+        halfDepth -
+        wallThickness
+
+        &&
+
+        position.z <
+        castlePosition.z +
+        halfDepth +
+        wallThickness;
+
+    if (insideBackWall)
+    {
+        return true;
+    }
+
+    //--------------------------------------------------
+    // Left Wall
+    //--------------------------------------------------
+
+    bool insideLeftWall =
+        position.z >
+        castlePosition.z - halfDepth
+
+        &&
+
+        position.z <
+        castlePosition.z + halfDepth
+
+        &&
+
+        position.x >
+        castlePosition.x -
+        halfWidth -
+        wallThickness
+
+        &&
+
+        position.x <
+        castlePosition.x -
+        halfWidth +
+        wallThickness;
+
+    if (insideLeftWall)
+    {
+        return true;
+    }
+
+    //--------------------------------------------------
+    // Right Wall
+    //--------------------------------------------------
+
+    bool insideRightWall =
+        position.z >
+        castlePosition.z - halfDepth
+
+        &&
+
+        position.z <
+        castlePosition.z + halfDepth
+
+        &&
+
+        position.x >
+        castlePosition.x +
+        halfWidth -
+        wallThickness
+
+        &&
+
+        position.x <
+        castlePosition.x +
+        halfWidth +
+        wallThickness;
+
+    if (insideRightWall)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+//--------------------------------------------------
+// Collision
+//--------------------------------------------------
+
+bool World::CheckCollision(
+    const glm::vec3& position) const
+{
+    if (
+        CheckTreeCollision(
+            position))
+    {
+        return true;
+    }
+
+    if (
+        CheckDoorCollision(
+            position))
+    {
+        return true;
+    }
+
+    if (
+        CheckCastleCollision(
+            position))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+//--------------------------------------------------
+// Ground
+//--------------------------------------------------
+
+bool World::IsBelowGround(
+    const glm::vec3& position,
+    float playerHeight) const
+{
+    return
+        position.y
+        <=
+        playerHeight;
 }
 
 //--------------------------------------------------
@@ -190,42 +439,75 @@ bool World::CanInteractWithDoor(
         door.CanInteract(
             playerPosition);
 }
-
 //--------------------------------------------------
 // Tree Generation
 //--------------------------------------------------
 
 void World::GenerateTrees()
 {
-    //--------------------------------------------------
-    // Generate 20 Trees
-    //--------------------------------------------------
+    const int treeCount =
+        150;
 
-    for (int i = 0;
-        i < 20;
+    for (
+        int i = 0;
+        i < treeCount;
         i++)
     {
         Tree tree;
 
         float x =
             static_cast<float>(
-                (std::rand() % 400) - 200)
+                (std::rand()
+                    %
+                    static_cast<int>(
+                        terrainSize * 10.0f))
+                -
+                static_cast<int>(
+                    terrainSize * 5.0f))
             / 10.0f;
 
         float z =
             static_cast<float>(
-                (std::rand() % 400) - 200)
+                (std::rand()
+                    %
+                    static_cast<int>(
+                        terrainSize * 10.0f))
+                -
+                static_cast<int>(
+                    terrainSize * 5.0f))
             / 10.0f;
 
         //--------------------------------------------------
-        // Keep Center Area Clear
+        // Keep Spawn Area Clear
         //--------------------------------------------------
 
         if (
-            x > -5.0f &&
-            x < 5.0f &&
-            z > -5.0f &&
-            z < 5.0f)
+            glm::length(
+                glm::vec2(
+                    x,
+                    z))
+            <
+            10.0f)
+        {
+            i--;
+            continue;
+        }
+
+        //--------------------------------------------------
+        // Keep Castle Area Clear
+        //--------------------------------------------------
+
+        if (
+            glm::distance(
+                glm::vec2(
+                    x,
+                    z),
+
+                glm::vec2(
+                    castlePosition.x,
+                    castlePosition.z))
+            <
+            25.0f)
         {
             i--;
             continue;
@@ -238,32 +520,47 @@ void World::GenerateTrees()
                 z
             });
 
+        //--------------------------------------------------
+        // Larger Trees
+        //--------------------------------------------------
+
+        float scale =
+            2.0f +
+            static_cast<float>(
+                std::rand() % 51)
+            / 100.0f;
+
+        tree.SetScale(
+            scale);
+
         trees.push_back(
             tree);
     }
 }
 
 //--------------------------------------------------
-// Door Generation
+// Castle Generation
 //--------------------------------------------------
 
-void World::GenerateDoor()
+void World::GenerateCastle()
 {
+    castlePosition.y =
+        0.0f;
+
     //--------------------------------------------------
-    // Wall Between Areas
+    // Door Position
     //--------------------------------------------------
 
     door.SetPosition(
         {
+            castlePosition.x,
             0.0f,
-            0.0f,
-            15.0f
+            castlePosition.z - 6.0f
         });
 
-    door.SetSize(
-        3.0f,
-        4.0f,
-        0.5f);
+    //--------------------------------------------------
+    // Start Closed
+    //--------------------------------------------------
 
     door.Close();
 }

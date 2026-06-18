@@ -62,11 +62,16 @@ private:
 
     void HandleMouseInput();
 
+    void HandleJumpInput();
+
     void HandleDoorInteraction();
 
     //--------------------------------------------------
-    // Update
+    // Physics
     //--------------------------------------------------
+
+    void UpdatePhysics(
+        float deltaTime);
 
     void UpdateCamera(
         float deltaTime);

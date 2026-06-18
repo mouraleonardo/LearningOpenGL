@@ -9,7 +9,7 @@
 namespace
 {
     //--------------------------------------------------
-    // Vertex Helpers
+    // Vertex Helper
     //--------------------------------------------------
 
     void AddTriangle(
@@ -87,96 +87,132 @@ namespace
         // Front
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, h,
             h, -h, h,
             h, h, h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, h,
             h, h, h,
             -h, h, h,
+
             r, g, b);
 
         //--------------------------------------------------
         // Back
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             h, -h, -h,
             -h, -h, -h,
             -h, h, -h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             h, -h, -h,
             -h, h, -h,
             h, h, -h,
+
             r, g, b);
 
         //--------------------------------------------------
         // Left
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, -h,
             -h, -h, h,
             -h, h, h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, -h,
             -h, h, h,
             -h, h, -h,
+
             r, g, b);
 
         //--------------------------------------------------
         // Right
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             h, -h, h,
             h, -h, -h,
             h, h, -h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             h, -h, h,
             h, h, -h,
             h, h, h,
+
             r, g, b);
 
         //--------------------------------------------------
         // Top
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, h, h,
             h, h, h,
             h, h, -h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, h, h,
             h, h, -h,
             -h, h, -h,
+
             r, g, b);
 
         //--------------------------------------------------
         // Bottom
         //--------------------------------------------------
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, -h,
             h, -h, -h,
             h, -h, h,
+
             r, g, b);
 
-        AddTriangle(v,
+        AddTriangle(
+            v,
+
             -h, -h, -h,
             h, -h, h,
             -h, -h, h,
+
             r, g, b);
 
         return v;
@@ -193,12 +229,20 @@ Renderer::Renderer()
 
     mvpLocation = -1;
 
+    projection =
+        glm::mat4(1.0f);
+
     groundMesh = nullptr;
+
     trunkMesh = nullptr;
     leavesMesh = nullptr;
-    doorMesh = nullptr;
-}
 
+    doorMesh = nullptr;
+
+    castleWallMesh = nullptr;
+    castleTowerMesh = nullptr;
+    castleRoofMesh = nullptr;
+}
 //--------------------------------------------------
 // Initialization
 //--------------------------------------------------
@@ -219,7 +263,7 @@ bool Renderer::Initialize(
                 screenHeight),
 
             0.1f,
-            100.0f);
+            1000.0f);
 
     //--------------------------------------------------
     // Ground
@@ -228,10 +272,10 @@ bool Renderer::Initialize(
     groundMesh =
         new Mesh(
             CreatePlane(
-                50.0f,
-                0.2f,
-                0.7f,
-                0.2f));
+                500.0f,
+                0.25f,
+                0.70f,
+                0.25f));
 
     //--------------------------------------------------
     // Tree Trunk
@@ -252,9 +296,9 @@ bool Renderer::Initialize(
     leavesMesh =
         new Mesh(
             CreateCube(
-                2.0f,
+                1.0f,
                 0.0f,
-                0.6f,
+                0.60f,
                 0.0f));
 
     //--------------------------------------------------
@@ -265,9 +309,45 @@ bool Renderer::Initialize(
         new Mesh(
             CreateCube(
                 1.0f,
-                0.5f,
-                0.3f,
-                0.1f));
+                0.45f,
+                0.25f,
+                0.10f));
+
+    //--------------------------------------------------
+    // Castle Wall
+    //--------------------------------------------------
+
+    castleWallMesh =
+        new Mesh(
+            CreateCube(
+                1.0f,
+                0.70f,
+                0.70f,
+                0.75f));
+
+    //--------------------------------------------------
+    // Castle Tower
+    //--------------------------------------------------
+
+    castleTowerMesh =
+        new Mesh(
+            CreateCube(
+                1.0f,
+                0.60f,
+                0.60f,
+                0.65f));
+
+    //--------------------------------------------------
+    // Castle Roof
+    //--------------------------------------------------
+
+    castleRoofMesh =
+        new Mesh(
+            CreateCube(
+                1.0f,
+                0.45f,
+                0.15f,
+                0.15f));
 
     return true;
 }
@@ -320,7 +400,6 @@ void Renderer::BeginFrame()
 void Renderer::EndFrame()
 {
 }
-
 //--------------------------------------------------
 // Internal Draw
 //--------------------------------------------------
@@ -350,6 +429,10 @@ void Renderer::DrawMesh(
     mesh->Draw();
 }
 
+//--------------------------------------------------
+// Ground
+//--------------------------------------------------
+
 void Renderer::DrawGround(
     const glm::mat4& view)
 {
@@ -361,6 +444,10 @@ void Renderer::DrawGround(
         model,
         view);
 }
+
+//--------------------------------------------------
+// Tree
+//--------------------------------------------------
 
 void Renderer::DrawTree(
     const Tree& tree,
@@ -378,7 +465,7 @@ void Renderer::DrawTree(
             glm::mat4(1.0f),
             glm::vec3(
                 position.x,
-                1.0f,
+                tree.GetTrunkHeight() * 0.5f,
                 position.z));
 
     trunkModel =
@@ -403,7 +490,9 @@ void Renderer::DrawTree(
             glm::mat4(1.0f),
             glm::vec3(
                 position.x,
-                3.0f,
+                tree.GetTrunkHeight()
+                +
+                tree.GetLeavesSize() * 0.5f,
                 position.z));
 
     leavesModel =
@@ -418,22 +507,71 @@ void Renderer::DrawTree(
         view);
 }
 
+//--------------------------------------------------
+// Door
+//--------------------------------------------------
+
 void Renderer::DrawDoor(
     const Door& door,
     const glm::mat4& view)
 {
-    if (door.IsOpen())
-    {
-        return;
-    }
-
     glm::vec3 position =
         door.GetPosition();
+
+    //--------------------------------------------------
+    // Base Transform
+    //--------------------------------------------------
 
     glm::mat4 model =
         glm::translate(
             glm::mat4(1.0f),
-            position);
+            glm::vec3(
+                position.x,
+                position.y +
+                door.GetHeight() * 0.5f,
+                position.z));
+
+    //--------------------------------------------------
+    // Move To Hinge
+    //--------------------------------------------------
+
+    model =
+        glm::translate(
+            model,
+            glm::vec3(
+                -door.GetWidth() * 0.5f,
+                0.0f,
+                0.0f));
+
+    //--------------------------------------------------
+    // Rotate Around Hinge
+    //--------------------------------------------------
+
+    model =
+        glm::rotate(
+            model,
+            glm::radians(
+                door.GetCurrentAngle()),
+            glm::vec3(
+                0.0f,
+                1.0f,
+                0.0f));
+
+    //--------------------------------------------------
+    // Return To Center
+    //--------------------------------------------------
+
+    model =
+        glm::translate(
+            model,
+            glm::vec3(
+                door.GetWidth() * 0.5f,
+                0.0f,
+                0.0f));
+
+    //--------------------------------------------------
+    // Scale
+    //--------------------------------------------------
 
     model =
         glm::scale(
@@ -448,6 +586,228 @@ void Renderer::DrawDoor(
         model,
         view);
 }
+//--------------------------------------------------
+// Castle
+//--------------------------------------------------
+
+void Renderer::DrawCastle(
+    const World& world,
+    const glm::mat4& view)
+{
+    glm::vec3 castlePosition =
+        world.GetCastlePosition();
+
+    //--------------------------------------------------
+// Front Left Wall
+//--------------------------------------------------
+
+    glm::mat4 frontLeftWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x - 5.0f,
+                castlePosition.y + 5.0f,
+                castlePosition.z - 6.0f));
+
+    frontLeftWall =
+        glm::scale(
+            frontLeftWall,
+            glm::vec3(
+                6.0f,
+                10.0f,
+                1.0f));
+
+    DrawMesh(
+        castleWallMesh,
+        frontLeftWall,
+        view);
+
+    //--------------------------------------------------
+    // Front Right Wall
+    //--------------------------------------------------
+
+    glm::mat4 frontRightWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x + 5.0f,
+                castlePosition.y + 5.0f,
+                castlePosition.z - 6.0f));
+
+    frontRightWall =
+        glm::scale(
+            frontRightWall,
+            glm::vec3(
+                6.0f,
+                10.0f,
+                1.0f));
+
+    //--------------------------------------------------
+    // Wall Above Door
+    //--------------------------------------------------
+
+    DrawMesh(
+        castleWallMesh,
+        frontRightWall,
+        view);
+
+    glm::mat4 frontTopWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x,
+                castlePosition.y + 8.5f,
+                castlePosition.z - 6.0f));
+
+    frontTopWall =
+        glm::scale(
+            frontTopWall,
+            glm::vec3(
+                4.0f,
+                5.0f,
+                1.0f));
+
+    DrawMesh(
+        castleWallMesh,
+        frontTopWall,
+        view);
+
+    //--------------------------------------------------
+    // Back Wall
+    //--------------------------------------------------
+
+    glm::mat4 backWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x,
+                castlePosition.y + 5.0f,
+                castlePosition.z + 6.0f));
+
+    backWall =
+        glm::scale(
+            backWall,
+            glm::vec3(
+                16.0f,
+                10.0f,
+                1.0f));
+
+    DrawMesh(
+        castleWallMesh,
+        backWall,
+        view);
+
+    //--------------------------------------------------
+    // Left Wall
+    //--------------------------------------------------
+
+    glm::mat4 leftWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x - 8.0f,
+                castlePosition.y + 5.0f,
+                castlePosition.z));
+
+    leftWall =
+        glm::scale(
+            leftWall,
+            glm::vec3(
+                1.0f,
+                10.0f,
+                12.0f));
+
+    DrawMesh(
+        castleWallMesh,
+        leftWall,
+        view);
+
+    //--------------------------------------------------
+    // Right Wall
+    //--------------------------------------------------
+
+    glm::mat4 rightWall =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x + 8.0f,
+                castlePosition.y + 5.0f,
+                castlePosition.z));
+
+    rightWall =
+        glm::scale(
+            rightWall,
+            glm::vec3(
+                1.0f,
+                10.0f,
+                12.0f));
+
+    DrawMesh(
+        castleWallMesh,
+        rightWall,
+        view);
+
+    //--------------------------------------------------
+    // Towers
+    //--------------------------------------------------
+
+    const glm::vec3 towerOffsets[4] =
+    {
+        {-8.0f, 7.0f, -6.0f},
+        { 8.0f, 7.0f, -6.0f},
+        {-8.0f, 7.0f,  6.0f},
+        { 8.0f, 7.0f,  6.0f}
+    };
+
+    for (int i = 0;
+        i < 4;
+        i++)
+    {
+        glm::mat4 towerModel =
+            glm::translate(
+                glm::mat4(1.0f),
+                castlePosition +
+                towerOffsets[i]);
+
+        towerModel =
+            glm::scale(
+                towerModel,
+                glm::vec3(
+                    4.0f,
+                    14.0f,
+                    4.0f));
+
+        DrawMesh(
+            castleTowerMesh,
+            towerModel,
+            view);
+    }
+
+    //--------------------------------------------------
+    // Roof
+    //--------------------------------------------------
+
+    glm::mat4 roofModel =
+        glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3(
+                castlePosition.x,
+                castlePosition.y + 10.5f,
+                castlePosition.z));
+
+    roofModel =
+        glm::scale(
+            roofModel,
+            glm::vec3(
+                18.0f,
+                1.0f,
+                14.0f));
+
+    DrawMesh(
+        castleRoofMesh,
+        roofModel,
+        view);
+}
 
 //--------------------------------------------------
 // Render Pass
@@ -460,8 +820,16 @@ void Renderer::RenderWorld(
     glm::mat4 view =
         camera.GetViewMatrix();
 
+    //--------------------------------------------------
+    // Ground
+    //--------------------------------------------------
+
     DrawGround(
         view);
+
+    //--------------------------------------------------
+    // Trees
+    //--------------------------------------------------
 
     for (const Tree& tree :
         world.GetTrees())
@@ -470,6 +838,18 @@ void Renderer::RenderWorld(
             tree,
             view);
     }
+
+    //--------------------------------------------------
+    // Castle
+    //--------------------------------------------------
+
+    DrawCastle(
+        world,
+        view);
+
+    //--------------------------------------------------
+    // Door
+    //--------------------------------------------------
 
     DrawDoor(
         world.GetDoor(),
@@ -493,6 +873,15 @@ void Renderer::Shutdown()
 
     delete doorMesh;
     doorMesh = nullptr;
+
+    delete castleWallMesh;
+    castleWallMesh = nullptr;
+
+    delete castleTowerMesh;
+    castleTowerMesh = nullptr;
+
+    delete castleRoofMesh;
+    castleRoofMesh = nullptr;
 }
 
 //--------------------------------------------------

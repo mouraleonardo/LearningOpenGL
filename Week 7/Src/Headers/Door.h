@@ -24,16 +24,22 @@ private:
     float depth;
 
     //--------------------------------------------------
-    // State
-    //--------------------------------------------------
-
-    bool open;
-
-    //--------------------------------------------------
     // Interaction
     //--------------------------------------------------
 
     float interactionDistance;
+
+    //--------------------------------------------------
+    // Animation
+    //--------------------------------------------------
+
+    bool open;
+
+    float currentAngle;
+
+    float targetAngle;
+
+    float animationSpeed;
 
 public:
 
@@ -80,6 +86,17 @@ public:
     bool IsOpen() const;
 
     //--------------------------------------------------
+    // Animation
+    //--------------------------------------------------
+
+    void Update(
+        float deltaTime);
+
+    float GetCurrentAngle() const;
+
+    float GetTargetAngle() const;
+
+    //--------------------------------------------------
     // Interaction
     //--------------------------------------------------
 
@@ -90,6 +107,14 @@ public:
 
     bool CanInteract(
         const glm::vec3& playerPosition) const;
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    bool CheckCollision(
+        const glm::vec3& playerPosition,
+        float playerRadius) const;
 
     //--------------------------------------------------
     // Bounds

@@ -16,9 +16,7 @@ private:
     // Terrain
     //--------------------------------------------------
 
-    float terrainWidth;
-
-    float terrainDepth;
+    float terrainSize;
 
     //--------------------------------------------------
     // Trees
@@ -27,13 +25,19 @@ private:
     std::vector<Tree> trees;
 
     //--------------------------------------------------
+    // Castle
+    //--------------------------------------------------
+
+    glm::vec3 castlePosition;
+
+    //--------------------------------------------------
     // Door
     //--------------------------------------------------
 
     Door door;
 
     //--------------------------------------------------
-    // Collision
+    // Player Collision
     //--------------------------------------------------
 
     float playerRadius;
@@ -46,7 +50,14 @@ private:
 
     void GenerateTrees();
 
-    void GenerateDoor();
+    void GenerateCastle();
+
+    //--------------------------------------------------
+    // Castle Collision
+    //--------------------------------------------------
+
+    bool CheckCastleCollision(
+        const glm::vec3& position) const;
 
 public:
 
@@ -57,7 +68,7 @@ public:
     World();
 
     //--------------------------------------------------
-    // Initialization
+    // Generation
     //--------------------------------------------------
 
     void Generate();
@@ -69,22 +80,31 @@ public:
     //--------------------------------------------------
 
     void SetTerrainSize(
-        float width,
-        float depth);
+        float size);
 
-    float GetTerrainWidth() const;
+    float GetTerrainSize() const;
 
-    float GetTerrainDepth() const;
+    //--------------------------------------------------
+    // Terrain Height
+    //--------------------------------------------------
+
+    float GetHeightAt(
+        float x,
+        float z) const;
 
     //--------------------------------------------------
     // Trees
     //--------------------------------------------------
 
-    std::vector<Tree>&
-        GetTrees();
+    std::vector<Tree>& GetTrees();
 
-    const std::vector<Tree>&
-        GetTrees() const;
+    const std::vector<Tree>& GetTrees() const;
+
+    //--------------------------------------------------
+    // Castle
+    //--------------------------------------------------
+
+    glm::vec3 GetCastlePosition() const;
 
     //--------------------------------------------------
     // Door
@@ -95,7 +115,7 @@ public:
     const Door& GetDoor() const;
 
     //--------------------------------------------------
-    // Collision
+    // Player Collision
     //--------------------------------------------------
 
     void SetPlayerRadius(
@@ -103,11 +123,41 @@ public:
 
     float GetPlayerRadius() const;
 
+    //--------------------------------------------------
+    // Tree Collision
+    //--------------------------------------------------
+
     bool CheckTreeCollision(
         const glm::vec3& position) const;
 
-    bool CheckWorldBounds(
+    //--------------------------------------------------
+    // Door Collision
+    //--------------------------------------------------
+
+    bool CheckDoorCollision(
         const glm::vec3& position) const;
+
+    //--------------------------------------------------
+    // Castle Collision
+    //--------------------------------------------------
+
+    bool IsInsideCastle(
+        const glm::vec3& position) const;
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    bool CheckCollision(
+        const glm::vec3& position) const;
+
+    //--------------------------------------------------
+    // Ground
+    //--------------------------------------------------
+
+    bool IsBelowGround(
+        const glm::vec3& position,
+        float playerHeight) const;
 
     //--------------------------------------------------
     // Interaction

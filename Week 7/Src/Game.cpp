@@ -57,10 +57,6 @@ bool Game::Initialize(
 
     InitializeWorld();
 
-    //--------------------------------------------------
-    // Mouse Capture
-    //--------------------------------------------------
-
     glfwSetInputMode(
         window,
         GLFW_CURSOR,
@@ -78,16 +74,54 @@ void Game::InitializeCamera()
             0.0f
         });
 
-    camera.SetMovementSpeed(
+    //--------------------------------------------------
+    // Walk
+    //--------------------------------------------------
+
+    camera.SetWalkSpeed(
         5.0f);
+
+    //--------------------------------------------------
+    // Sprint
+    //--------------------------------------------------
+
+    camera.SetSprintSpeed(
+        20.0f);
+
+    //--------------------------------------------------
+    // Mouse
+    //--------------------------------------------------
 
     camera.SetMouseSensitivity(
         0.1f);
+
+    //--------------------------------------------------
+    // Physics
+    //--------------------------------------------------
+
+    camera.SetGravity(
+        20.0f);
+
+    camera.SetJumpForce(
+        8.0f);
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    camera.SetPlayerRadius(
+        0.4f);
+
+    camera.SetPlayerHeight(
+        1.8f);
 }
 
 void Game::InitializeWorld()
 {
     world.Generate();
+
+    world.SetPlayerRadius(
+        camera.GetPlayerRadius());
 }
 
 //--------------------------------------------------
@@ -102,12 +136,36 @@ void Game::ProcessInput(
 
     HandleMouseInput();
 
+    HandleJumpInput();
+
     HandleDoorInteraction();
 }
 
 void Game::HandleKeyboardInput(
     float deltaTime)
 {
+    //--------------------------------------------------
+    // Sprint
+    //--------------------------------------------------
+
+    if (
+        glfwGetKey(
+            window,
+            GLFW_KEY_LEFT_SHIFT)
+        ==
+        GLFW_PRESS)
+    {
+        camera.StartSprint();
+    }
+    else
+    {
+        camera.StopSprint();
+    }
+
+    //--------------------------------------------------
+    // Save Position
+    //--------------------------------------------------
+
     glm::vec3 oldPosition =
         camera.GetPosition();
 
@@ -176,19 +234,43 @@ void Game::HandleKeyboardInput(
     //--------------------------------------------------
 
     if (
-        !world.CheckWorldBounds(
+        world.CheckCollision(
             camera.GetPosition()))
     {
         camera.SetPosition(
             oldPosition);
     }
+}
+
+void Game::HandleJumpInput()
+{
+    static bool keyReleased =
+        true;
 
     if (
-        world.CheckTreeCollision(
-            camera.GetPosition()))
+        glfwGetKey(
+            window,
+            GLFW_KEY_SPACE)
+        ==
+        GLFW_RELEASE)
     {
-        camera.SetPosition(
-            oldPosition);
+        keyReleased =
+            true;
+    }
+
+    if (
+        glfwGetKey(
+            window,
+            GLFW_KEY_SPACE)
+        ==
+        GLFW_PRESS
+        &&
+        keyReleased)
+    {
+        keyReleased =
+            false;
+
+        camera.Jump();
     }
 }
 
@@ -286,6 +368,9 @@ void Game::HandleDoorInteraction()
 void Game::Update(
     float deltaTime)
 {
+    UpdatePhysics(
+        deltaTime);
+
     UpdateCamera(
         deltaTime);
 
@@ -293,16 +378,88 @@ void Game::Update(
         deltaTime);
 }
 
+void Game::UpdatePhysics(
+    float deltaTime)
+{
+    //--------------------------------------------------
+    // Previous Position
+    //--------------------------------------------------
+
+    glm::vec3 previousPosition =
+        camera.GetPosition();
+
+    //--------------------------------------------------
+    // Gravity
+    //--------------------------------------------------
+
+    camera.ApplyGravity(
+        deltaTime);
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    if (
+        world.CheckCollision(
+            camera.GetPosition()))
+    {
+        camera.SetPosition(
+            previousPosition);
+    }
+
+    //--------------------------------------------------
+    // Flat Terrain
+    //--------------------------------------------------
+
+    glm::vec3 position =
+        camera.GetPosition();
+
+    float terrainHeight =
+        world.GetHeightAt(
+            position.x,
+            position.z);
+
+    if (
+        position.y
+        <=
+        terrainHeight +
+        camera.GetPlayerHeight())
+    {
+        camera.Land(
+            terrainHeight);
+    }
+}
+
 void Game::UpdateCamera(
     float deltaTime)
 {
     (void)deltaTime;
+
+    glm::vec3 position =
+        camera.GetPosition();
+
+    float terrainHeight =
+        world.GetHeightAt(
+            position.x,
+            position.z);
+
+    if (
+        camera.IsGrounded())
+    {
+        position.y =
+            terrainHeight +
+            camera.GetPlayerHeight();
+
+        camera.SetPosition(
+            position);
+    }
 }
 
 void Game::UpdateWorld(
     float deltaTime)
 {
-    (void)deltaTime;
+    world.GetDoor().Update(
+        deltaTime);
 }
 
 //--------------------------------------------------
@@ -326,7 +483,6 @@ void Game::Render()
 
 void Game::Shutdown()
 {
-    renderer.Shutdown();
 }
 
 //--------------------------------------------------

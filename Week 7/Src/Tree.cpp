@@ -16,21 +16,28 @@ Tree::Tree()
     };
 
     //--------------------------------------------------
+    // Scale
+    //--------------------------------------------------
+
+    scale =
+        1.0f;
+
+    //--------------------------------------------------
     // Trunk
     //--------------------------------------------------
 
     trunkWidth =
-        0.8f;
+        1.0f;
 
     trunkHeight =
-        2.0f;
+        4.0f;
 
     //--------------------------------------------------
     // Leaves
     //--------------------------------------------------
 
     leavesSize =
-        2.0f;
+        4.0f;
 }
 
 //--------------------------------------------------
@@ -50,6 +57,22 @@ glm::vec3 Tree::GetPosition() const
 }
 
 //--------------------------------------------------
+// Scale
+//--------------------------------------------------
+
+void Tree::SetScale(
+    float newScale)
+{
+    scale =
+        newScale;
+}
+
+float Tree::GetScale() const
+{
+    return scale;
+}
+
+//--------------------------------------------------
 // Trunk
 //--------------------------------------------------
 
@@ -66,12 +89,16 @@ void Tree::SetTrunkSize(
 
 float Tree::GetTrunkWidth() const
 {
-    return trunkWidth;
+    return
+        trunkWidth *
+        scale;
 }
 
 float Tree::GetTrunkHeight() const
 {
-    return trunkHeight;
+    return
+        trunkHeight *
+        scale;
 }
 
 //--------------------------------------------------
@@ -87,7 +114,9 @@ void Tree::SetLeavesSize(
 
 float Tree::GetLeavesSize() const
 {
-    return leavesSize;
+    return
+        leavesSize *
+        scale;
 }
 
 //--------------------------------------------------
@@ -96,30 +125,36 @@ float Tree::GetLeavesSize() const
 
 glm::vec3 Tree::GetMinBounds() const
 {
+    float width =
+        GetTrunkWidth();
+
     return
     {
         position.x -
-        trunkWidth * 0.5f,
+        width * 0.5f,
 
         position.y,
 
         position.z -
-        trunkWidth * 0.5f
+        width * 0.5f
     };
 }
 
 glm::vec3 Tree::GetMaxBounds() const
 {
+    float width =
+        GetTrunkWidth();
+
     return
     {
         position.x +
-        trunkWidth * 0.5f,
+        width * 0.5f,
 
         position.y +
-        trunkHeight,
+        GetTrunkHeight(),
 
         position.z +
-        trunkWidth * 0.5f
+        width * 0.5f
     };
 }
 
@@ -137,35 +172,49 @@ bool Tree::CheckCollision(
     glm::vec3 maxBounds =
         GetMaxBounds();
 
-    if (
-        point.x + radius <
-        minBounds.x)
-    {
-        return false;
-    }
+    //--------------------------------------------------
+    // Sphere vs AABB
+    //--------------------------------------------------
 
-    if (
-        point.x - radius >
-        maxBounds.x)
-    {
-        return false;
-    }
+    float closestX =
+        glm::clamp(
+            point.x,
+            minBounds.x,
+            maxBounds.x);
 
-    if (
-        point.z + radius <
-        minBounds.z)
-    {
-        return false;
-    }
+    float closestY =
+        glm::clamp(
+            point.y,
+            minBounds.y,
+            maxBounds.y);
 
-    if (
-        point.z - radius >
-        maxBounds.z)
-    {
-        return false;
-    }
+    float closestZ =
+        glm::clamp(
+            point.z,
+            minBounds.z,
+            maxBounds.z);
 
-    return true;
+    float dx =
+        point.x -
+        closestX;
+
+    float dy =
+        point.y -
+        closestY;
+
+    float dz =
+        point.z -
+        closestZ;
+
+    float distanceSquared =
+        dx * dx +
+        dy * dy +
+        dz * dz;
+
+    return
+        distanceSquared <
+        radius *
+        radius;
 }
 
 //--------------------------------------------------

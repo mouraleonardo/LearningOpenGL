@@ -14,7 +14,7 @@ Camera::Camera()
     position =
     {
         0.0f,
-        2.0f,
+        1.8f,
         5.0f
     };
 
@@ -30,7 +30,7 @@ Camera::Camera()
     };
 
     //--------------------------------------------------
-    // FPS Camera Angles
+    // FPS Rotation
     //--------------------------------------------------
 
     yaw =
@@ -43,11 +43,43 @@ Camera::Camera()
     // Movement
     //--------------------------------------------------
 
-    movementSpeed =
+    walkSpeed =
         5.0f;
+
+    sprintSpeed =
+        10.0f;
+
+    movementSpeed =
+        walkSpeed;
 
     mouseSensitivity =
         0.1f;
+
+    //--------------------------------------------------
+    // Physics
+    //--------------------------------------------------
+
+    verticalVelocity =
+        0.0f;
+
+    gravity =
+        20.0f;
+
+    jumpForce =
+        8.0f;
+
+    grounded =
+        true;
+
+    //--------------------------------------------------
+    // Collision
+    //--------------------------------------------------
+
+    playerRadius =
+        0.4f;
+
+    playerHeight =
+        1.8f;
 
     //--------------------------------------------------
     // Initial Vectors
@@ -96,10 +128,6 @@ void Camera::SetPitch(
     pitch =
         value;
 
-    //--------------------------------------------------
-    // Clamp Pitch
-    //--------------------------------------------------
-
     if (pitch > 89.0f)
     {
         pitch = 89.0f;
@@ -119,7 +147,7 @@ float Camera::GetPitch() const
 }
 
 //--------------------------------------------------
-// Vectors
+// Direction Vectors
 //--------------------------------------------------
 
 glm::vec3 Camera::GetFront() const
@@ -150,14 +178,25 @@ glm::mat4 Camera::GetViewMatrix() const
 }
 
 //--------------------------------------------------
-// Movement
+// Horizontal Movement
 //--------------------------------------------------
 
 void Camera::MoveForward(
     float deltaTime)
 {
+    glm::vec3 moveDirection =
+    {
+        front.x,
+        0.0f,
+        front.z
+    };
+
+    moveDirection =
+        glm::normalize(
+            moveDirection);
+
     position +=
-        front *
+        moveDirection *
         movementSpeed *
         deltaTime;
 }
@@ -165,8 +204,19 @@ void Camera::MoveForward(
 void Camera::MoveBackward(
     float deltaTime)
 {
+    glm::vec3 moveDirection =
+    {
+        front.x,
+        0.0f,
+        front.z
+    };
+
+    moveDirection =
+        glm::normalize(
+            moveDirection);
+
     position -=
-        front *
+        moveDirection *
         movementSpeed *
         deltaTime;
 }
@@ -174,8 +224,19 @@ void Camera::MoveBackward(
 void Camera::MoveLeft(
     float deltaTime)
 {
+    glm::vec3 moveDirection =
+    {
+        right.x,
+        0.0f,
+        right.z
+    };
+
+    moveDirection =
+        glm::normalize(
+            moveDirection);
+
     position -=
-        right *
+        moveDirection *
         movementSpeed *
         deltaTime;
 }
@@ -183,8 +244,19 @@ void Camera::MoveLeft(
 void Camera::MoveRight(
     float deltaTime)
 {
+    glm::vec3 moveDirection =
+    {
+        right.x,
+        0.0f,
+        right.z
+    };
+
+    moveDirection =
+        glm::normalize(
+            moveDirection);
+
     position +=
-        right *
+        moveDirection *
         movementSpeed *
         deltaTime;
 }
@@ -209,10 +281,6 @@ void Camera::ProcessMouseMovement(
     pitch +=
         yOffset;
 
-    //--------------------------------------------------
-    // Clamp Vertical Rotation
-    //--------------------------------------------------
-
     if (pitch > 89.0f)
     {
         pitch = 89.0f;
@@ -227,6 +295,121 @@ void Camera::ProcessMouseMovement(
 }
 
 //--------------------------------------------------
+// Physics
+//--------------------------------------------------
+
+void Camera::ApplyGravity(
+    float deltaTime)
+{
+    if (grounded)
+    {
+        return;
+    }
+
+    verticalVelocity -=
+        gravity *
+        deltaTime;
+
+    position.y +=
+        verticalVelocity *
+        deltaTime;
+}
+
+void Camera::Jump()
+{
+    if (!grounded)
+    {
+        return;
+    }
+
+    grounded =
+        false;
+
+    verticalVelocity =
+        jumpForce;
+}
+
+void Camera::Land(
+    float groundHeight)
+{
+    position.y =
+        groundHeight +
+        playerHeight;
+
+    verticalVelocity =
+        0.0f;
+
+    grounded =
+        true;
+}
+
+float Camera::GetVerticalVelocity() const
+{
+    return verticalVelocity;
+}
+
+bool Camera::IsGrounded() const
+{
+    return grounded;
+}
+
+//--------------------------------------------------
+// Physics Settings
+//--------------------------------------------------
+
+void Camera::SetGravity(
+    float value)
+{
+    gravity =
+        value;
+}
+
+float Camera::GetGravity() const
+{
+    return gravity;
+}
+
+void Camera::SetJumpForce(
+    float value)
+{
+    jumpForce =
+        value;
+}
+
+float Camera::GetJumpForce() const
+{
+    return jumpForce;
+}
+
+//--------------------------------------------------
+// Collision
+//--------------------------------------------------
+
+void Camera::SetPlayerRadius(
+    float radius)
+{
+    playerRadius =
+        radius;
+}
+
+float Camera::GetPlayerRadius() const
+{
+    return playerRadius;
+}
+
+void Camera::SetPlayerHeight(
+    float height)
+{
+    playerHeight =
+        height;
+}
+
+float Camera::GetPlayerHeight() const
+{
+    return playerHeight;
+}
+
+//--------------------------------------------------
 // Speed
 //--------------------------------------------------
 
@@ -235,12 +418,62 @@ void Camera::SetMovementSpeed(
 {
     movementSpeed =
         speed;
+
+    walkSpeed =
+        speed;
 }
 
 float Camera::GetMovementSpeed() const
 {
     return movementSpeed;
 }
+
+//--------------------------------------------------
+// Sprint
+//--------------------------------------------------
+
+void Camera::SetWalkSpeed(
+    float speed)
+{
+    walkSpeed =
+        speed;
+
+    movementSpeed =
+        speed;
+}
+
+float Camera::GetWalkSpeed() const
+{
+    return walkSpeed;
+}
+
+void Camera::SetSprintSpeed(
+    float speed)
+{
+    sprintSpeed =
+        speed;
+}
+
+float Camera::GetSprintSpeed() const
+{
+    return sprintSpeed;
+}
+
+void Camera::StartSprint()
+{
+    movementSpeed =
+        sprintSpeed;
+}
+
+void Camera::StopSprint()
+{
+    movementSpeed =
+        walkSpeed;
+}
+
+//--------------------------------------------------
+// Mouse Sensitivity
+//--------------------------------------------------
 
 void Camera::SetMouseSensitivity(
     float sensitivity)
@@ -264,21 +497,26 @@ void Camera::UpdateVectors()
 
     direction.x =
         std::cos(
-            glm::radians(yaw))
+            glm::radians(
+                yaw))
         *
         std::cos(
-            glm::radians(pitch));
+            glm::radians(
+                pitch));
 
     direction.y =
         std::sin(
-            glm::radians(pitch));
+            glm::radians(
+                pitch));
 
     direction.z =
         std::sin(
-            glm::radians(yaw))
+            glm::radians(
+                yaw))
         *
         std::cos(
-            glm::radians(pitch));
+            glm::radians(
+                pitch));
 
     front =
         glm::normalize(

@@ -5,7 +5,7 @@
 Door::Door()
 {
     //--------------------------------------------------
-    // Default Position
+    // Transform
     //--------------------------------------------------
 
     position =
@@ -16,31 +16,40 @@ Door::Door()
     };
 
     //--------------------------------------------------
-    // Default Size
+    // Size
     //--------------------------------------------------
 
     width =
-        2.0f;
+        4.0f;
 
     height =
-        3.0f;
+        6.0f;
 
     depth =
         0.5f;
-
-    //--------------------------------------------------
-    // State
-    //--------------------------------------------------
-
-    open =
-        false;
 
     //--------------------------------------------------
     // Interaction
     //--------------------------------------------------
 
     interactionDistance =
-        3.0f;
+        5.0f;
+
+    //--------------------------------------------------
+    // Animation
+    //--------------------------------------------------
+
+    open =
+        false;
+
+    currentAngle =
+        0.0f;
+
+    targetAngle =
+        0.0f;
+
+    animationSpeed =
+        120.0f;
 }
 
 //--------------------------------------------------
@@ -101,23 +110,97 @@ void Door::Open()
 {
     open =
         true;
+
+    targetAngle =
+        90.0f;
 }
 
 void Door::Close()
 {
     open =
         false;
+
+    targetAngle =
+        0.0f;
 }
 
 void Door::Toggle()
 {
-    open =
-        !open;
+    if (open)
+    {
+        Close();
+    }
+    else
+    {
+        Open();
+    }
 }
 
 bool Door::IsOpen() const
 {
     return open;
+}
+
+//--------------------------------------------------
+// Animation
+//--------------------------------------------------
+
+void Door::Update(
+    float deltaTime)
+{
+    float step =
+        animationSpeed *
+        deltaTime;
+
+    //--------------------------------------------------
+    // Opening
+    //--------------------------------------------------
+
+    if (
+        currentAngle <
+        targetAngle)
+    {
+        currentAngle +=
+            step;
+
+        if (
+            currentAngle >
+            targetAngle)
+        {
+            currentAngle =
+                targetAngle;
+        }
+    }
+
+    //--------------------------------------------------
+    // Closing
+    //--------------------------------------------------
+
+    if (
+        currentAngle >
+        targetAngle)
+    {
+        currentAngle -=
+            step;
+
+        if (
+            currentAngle <
+            targetAngle)
+        {
+            currentAngle =
+                targetAngle;
+        }
+    }
+}
+
+float Door::GetCurrentAngle() const
+{
+    return currentAngle;
+}
+
+float Door::GetTargetAngle() const
+{
+    return targetAngle;
 }
 
 //--------------------------------------------------
@@ -147,6 +230,72 @@ bool Door::CanInteract(
     return
         distance <=
         interactionDistance;
+}
+
+//--------------------------------------------------
+// Collision
+//--------------------------------------------------
+
+bool Door::CheckCollision(
+    const glm::vec3& playerPosition,
+    float playerRadius) const
+{
+    //--------------------------------------------------
+    // Door mostly open
+    //--------------------------------------------------
+
+    if (
+        currentAngle >
+        70.0f)
+    {
+        return false;
+    }
+
+    glm::vec3 minBounds =
+        GetMinBounds();
+
+    glm::vec3 maxBounds =
+        GetMaxBounds();
+
+    float closestX =
+        glm::clamp(
+            playerPosition.x,
+            minBounds.x,
+            maxBounds.x);
+
+    float closestY =
+        glm::clamp(
+            playerPosition.y,
+            minBounds.y,
+            maxBounds.y);
+
+    float closestZ =
+        glm::clamp(
+            playerPosition.z,
+            minBounds.z,
+            maxBounds.z);
+
+    float dx =
+        playerPosition.x -
+        closestX;
+
+    float dy =
+        playerPosition.y -
+        closestY;
+
+    float dz =
+        playerPosition.z -
+        closestZ;
+
+    float distanceSquared =
+        dx * dx +
+        dy * dy +
+        dz * dz;
+
+    return
+        distanceSquared <
+        playerRadius *
+        playerRadius;
 }
 
 //--------------------------------------------------
