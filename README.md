@@ -14,47 +14,53 @@ The goal is to build a strong foundation for graphics programming and future gam
 
 # Current Project
 
-Tank Battle is a top-down 2D tank combat prototype built with Modern OpenGL.
+## First-Person Medieval Environment
+
+A 3D first-person medieval environment built with Modern OpenGL as part of the Game Engine Foundations course.
 
 Current features include:
 
-- Player-controlled tank
-- Enemy AI patrol and chase behavior
-- Projectile combat
-- Procedural battlefield generation
-- Destructible and indestructible obstacles
+- First-person camera with mouse look
+- Modern OpenGL 3.3 Core Profile rendering
+- Model, View, and Projection (MVP) transformations
+- Procedurally generated forest
+- Multiple procedural tree types
+- Medieval castle
 - Collision detection
-- Custom rendering pipeline
-- OpenGL 3.3 Core Profile
-- GLFW input system
+- Interactive animated door
+- Interactive treasure chests
+- Object-oriented game architecture
+- Modular rendering pipeline
+- GLFW input handling
 - GLEW extension loading
 - GLM mathematics and transformations
-
-The project is being developed incrementally as part of the Game Engine Foundations course.
 
 ---
 
 # Topics Covered
 
-- OpenGL basics
-- Graphics pipeline
-- Rendering primitives
-- Vertex data
-- VAO / VBO
-- Shaders
-- Transformations
-- Coordinate Spaces
+- Modern OpenGL
+- Graphics Pipeline
+- Vertex Data
+- VAO / VBO / EBO
+- GLSL Shaders
+- Mesh Rendering
 - Model / View / Projection (MVP)
+- Coordinate Spaces
+- Perspective Projection
+- Depth Testing
+- Texture Mapping
+- Camera Systems
+- Frame-Independent Animation
 - Delta Time
-- Frame-Independent Motion
-- Input Systems
+- Object-Oriented Programming (OOP)
 - Collision Detection
-- Orthographic Projection
-- Basic AI
+- Procedural Modeling
 - Procedural Generation
-- Camera systems
-- Lighting
-- Textures
+- Scene Management
+- Interactive Objects
+- Transformations
+- OpenGL Rendering Pipeline
 
 ---
 
@@ -165,6 +171,38 @@ The project is being developed incrementally as part of the Game Engine Foundati
   - Bullet
   - Shader
   - Mesh
+
+---
+
+## Week 7
+
+- Transitioned from a 2D project to a fully 3D first-person environment
+- Implemented a first-person camera with keyboard movement and mouse look
+- Added perspective projection using GLM
+- Implemented collision detection between the player and the environment
+- Created a modular game architecture following Object-Oriented Programming (OOP) principles
+- Built a medieval castle using procedural cube-based modeling
+- Implemented an interactive animated castle door
+- Developed a reusable Renderer class responsible for scene rendering
+- Expanded the Mesh and Shader systems for 3D rendering
+- Applied Model, View, and Projection (MVP) transformations throughout the engine
+- Continued using Modern OpenGL 3.3 Core Profile with GLFW, GLEW, and GLM
+
+---
+
+## Week 8
+
+- Expanded the medieval environment with interactive treasure chests
+- Implemented smooth lid animations using frame-independent interpolation with Delta Time
+- Added player interaction using keyboard input
+- Designed reusable game objects following Object-Oriented Programming (OOP) principles
+- Built treasure chests procedurally using cube primitives
+- Implemented multiple procedural tree types
+- Added randomized tree rotation, scale, trunk height, trunk width, and leaf size
+- Improved the forest using procedural generation techniques
+- Reinforced the separation of responsibilities between the Game, World, Renderer, and gameplay object classes
+- Continued expanding the custom rendering pipeline using Modern OpenGL
+- Prepared the engine architecture for future gameplay objects such as tables, chairs, weapons, decorations, and other interactive medieval assets
 
 ---
 
