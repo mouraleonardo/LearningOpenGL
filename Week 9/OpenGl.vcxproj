@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions); GLEW_STATIC;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Src\Dependencies\GLFW\Include;$(SolutionDir)Src\Dependencies\GLEW\Include;$(SolutionDir)Src\Dependencies\glm;$(ProjectDir)Src\Headers;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Src\Dependencies\GLFW\Include;$(SolutionDir)Src\Dependencies\GLEW\Include;$(SolutionDir)Src\Dependencies\glm;$(ProjectDir)Src\Headers;$(SolutionDir)Src\Dependencies\STB</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -96,7 +96,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions); GLEW_STATIC;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Src\Dependencies\GLFW\Include;$(SolutionDir)Src\Dependencies\GLEW\Include;$(SolutionDir)Src\Dependencies\glm;$(ProjectDir)Src\Headers;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Src\Dependencies\GLFW\Include;$(SolutionDir)Src\Dependencies\GLEW\Include;$(SolutionDir)Src\Dependencies\glm;$(ProjectDir)Src\Headers;$(SolutionDir)Src\Dependencies\STB</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -144,26 +144,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Src\Camera.cpp" />
-    <ClCompile Include="Src\Door.cpp" />
-    <ClCompile Include="Src\Game.cpp" />
     <ClCompile Include="Src\Main.cpp" />
     <ClCompile Include="Src\Mesh.cpp" />
-    <ClCompile Include="Src\Renderer.cpp" />
     <ClCompile Include="Src\Shader.cpp" />
+    <ClCompile Include="Src\Texture.cpp" />
     <ClCompile Include="Src\TreasureChest.cpp" />
-    <ClCompile Include="Src\Tree.cpp" />
-    <ClCompile Include="Src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Headers\Camera.h" />
-    <ClInclude Include="Src\Headers\Door.h" />
-    <ClInclude Include="Src\Headers\Game.h" />
     <ClInclude Include="Src\Headers\Mesh.h" />
-    <ClInclude Include="Src\Headers\Renderer.h" />
     <ClInclude Include="Src\Headers\Shader.h" />
+    <ClInclude Include="Src\Headers\Texture.h" />
     <ClInclude Include="Src\Headers\TreasureChest.h" />
-    <ClInclude Include="Src\Headers\Tree.h" />
-    <ClInclude Include="Src\Headers\World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

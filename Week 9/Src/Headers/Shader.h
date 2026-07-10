@@ -1,43 +1,36 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
+
+#include <string>
+
+#include <glew.h>
+#include <glm.hpp>
+
 
 class Shader
 {
-private:
-
-    //--------------------------------------------------
-    // OpenGL Program
-    //--------------------------------------------------
-
-    unsigned int programID;
-
 public:
 
-    //--------------------------------------------------
-    // Constructor
-    //--------------------------------------------------
+    GLuint ID;
 
-    Shader(
-        const char* vertexPath,
-        const char* fragmentPath);
+    Shader(const char* vertexPath, const char* fragmentPath);
 
-    //--------------------------------------------------
-    // Usage
-    //--------------------------------------------------
+    void Use() const;
 
-    void Use();
+    void SetBool(const std::string& name, bool value) const;
 
-    //--------------------------------------------------
-    // Accessor
-    //--------------------------------------------------
+    void SetInt(const std::string& name, int value) const;
 
-    unsigned int GetID() const;
+    void SetFloat(const std::string& name, float value) const;
 
-    //--------------------------------------------------
-    // Destructor
-    //--------------------------------------------------
+    void SetVec3(const std::string& name, const glm::vec3& value) const;
 
-    ~Shader();
+    void SetMat4(const std::string& name, const glm::mat4& value) const;
+
+private:
+
+    std::string ReadFile(const char* path);
+
+    GLuint Compile(GLenum type, const std::string& source);
+
+    void CheckProgram(GLuint program);
 };
-
-#endif

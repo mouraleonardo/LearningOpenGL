@@ -1,472 +1,182 @@
-/*
-    ============================================================
-    FPS Explorer - OpenGL
-
-    Author: Leonardo Moura
-    Date: 2026
-
-    Description:
-
-    This application implements a first-person 3D exploration
-    environment using modern OpenGL.
-
-    The project demonstrates:
-
-        • OpenGL initialization
-        • Window and context creation
-        • Shader management
-        • Game loop architecture
-        • Delta time based updates
-        • First Person Camera (FPS)
-        • Perspective Projection
-        • View Matrix generation
-        • Mouse Look controls
-        • Sprint movement
-        • Gravity simulation
-        • Jump mechanics
-        • Collision detection
-        • Open world navigation
-        • Interactive castle door system
-        • Basic world rendering
-
-    Technologies:
-
-        • OpenGL 3.3 Core Profile
-        • GLFW
-        • GLEW
-        • GLM
-        • C++
-
-    Learning Topics:
-
-        • Coordinate Systems
-        • Model Matrices
-        • View Matrices
-        • Projection Matrices
-        • Camera Systems
-        • Real-Time Rendering
-        • Input Processing
-        • Physics Fundamentals
-
-    ============================================================
-*/
+#include <iostream>
 
 #include <glew.h>
 #include <glfw3.h>
 
-#include <iostream>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 
 #include "Shader.h"
-#include "Game.h"
+#include "Texture.h"
+#include "Camera.h"
+#include "TreasureChest.h"
 
-//--------------------------------------------------
-// Fixed application resolution.
-//
-// The entire world is rendered using
-// a 1280x720 viewport.
-//--------------------------------------------------
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
 
-constexpr int WINDOW_WIDTH = 1280;
-constexpr int WINDOW_HEIGHT = 720;
+Camera camera;
+TreasureChest* chest = nullptr;
+
+float lastFrame = 0.0f;
+float deltaTime = 0.0f;
+
+bool firstMouse = true;
+bool ePressed = false;
+
+float lastX = SCR_WIDTH * 0.5f;
+float lastY = SCR_HEIGHT * 0.5f;
+
+void ProcessInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !ePressed)
+    {
+        if (chest != nullptr)
+            chest->Toggle();
+
+        ePressed = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+    {
+        ePressed = false;
+    }
+}
+
+void MouseCallback(GLFWwindow*, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = (float)xpos;
+        lastY = (float)ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = (float)xpos - lastX;
+    float yoffset = lastY - (float)ypos;
+
+    lastX = (float)xpos;
+    lastY = (float)ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void ScrollCallback(GLFWwindow*, double, double yoffset)
+{
+    camera.ProcessMouseScroll((float)yoffset);
+}
 
 int main()
 {
-    //--------------------------------------------------
-    // Initialize GLFW.
-    //
-    // GLFW is responsible for:
-    //
-    //  • Window creation
-    //  • OpenGL context creation
-    //  • Keyboard input
-    //  • Mouse input
-    //  • Event processing
-    //--------------------------------------------------
-
     if (!glfwInit())
-    {
-        std::cout
-            << "Failed to initialize GLFW"
-            << std::endl;
-
         return -1;
-    }
 
-    //--------------------------------------------------
-    // Configure OpenGL.
-    //
-    // Using:
-    //
-    //      OpenGL 3.3 Core Profile
-    //
-    // Core Profile removes legacy
-    // functionality and enforces
-    // modern OpenGL practices.
-    //--------------------------------------------------
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    glfwWindowHint(
-        GLFW_CONTEXT_VERSION_MAJOR,
-        3);
-
-    glfwWindowHint(
-        GLFW_CONTEXT_VERSION_MINOR,
-        3);
-
-    glfwWindowHint(
-        GLFW_OPENGL_PROFILE,
-        GLFW_OPENGL_CORE_PROFILE);
-
-    //--------------------------------------------------
-    // Create application window.
-    //
-    // Parameters:
-    //
-    //  Width
-    //  Height
-    //  Window Title
-    //  Monitor
-    //  Shared Context
-    //--------------------------------------------------
-
-    GLFWwindow* window =
-        glfwCreateWindow(
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT,
-            "FPS Explorer",
-            nullptr,
-            nullptr);
-
-    //--------------------------------------------------
-    // Verify successful window creation.
-    //--------------------------------------------------
+    GLFWwindow* window = glfwCreateWindow(
+        SCR_WIDTH,
+        SCR_HEIGHT,
+        "Treasure Chest",
+        nullptr,
+        nullptr
+    );
 
     if (!window)
     {
-        std::cout
-            << "Failed to create window"
-            << std::endl;
-
         glfwTerminate();
-
         return -1;
     }
 
-    //--------------------------------------------------
-    // Make this window's OpenGL context
-    // the active context.
-    //--------------------------------------------------
+    glfwMakeContextCurrent(window);
 
-    glfwMakeContextCurrent(
-        window);
+    glewExperimental = GL_TRUE;
 
-    //--------------------------------------------------
-    // Initialize GLEW.
-    //
-    // GLEW loads modern OpenGL functions.
-    //
-    // Examples:
-    //
-    //      glCreateShader()
-    //      glCreateProgram()
-    //      glGenVertexArrays()
-    //      glBindVertexArray()
-    //
-    // Without GLEW these functions
-    // would not be available.
-    //--------------------------------------------------
-
-    glewExperimental =
-        GL_TRUE;
-
-    GLenum result =
-        glewInit();
-
-    //--------------------------------------------------
-    // Verify successful GLEW initialization.
-    //--------------------------------------------------
-
-    if (result != GLEW_OK)
+    if (glewInit() != GLEW_OK)
     {
-        std::cout
-            << "GLEW ERROR: "
-            << glewGetErrorString(
-                result)
-            << std::endl;
-
-        glfwDestroyWindow(
-            window);
-
-        glfwTerminate();
-
+        std::cout << "Erro ao iniciar GLEW\n";
         return -1;
     }
 
-    //--------------------------------------------------
-    // Configure OpenGL rendering state.
-    //
-    // Viewport:
-    // Defines the drawable area.
-    //
-    // Depth Testing:
-    // Ensures closer objects appear
-    // in front of distant objects.
-    //
-    // Required for rendering:
-    //
-    //  • Terrain
-    //  • Trees
-    //  • Castle
-    //  • Door
-    //--------------------------------------------------
+    glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetScrollCallback(window, ScrollCallback);
 
-    glViewport(
-        0,
-        0,
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glEnable(
-        GL_DEPTH_TEST);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-    //--------------------------------------------------
-    // Load and compile shader program.
-    //
-    // Vertex Shader:
-    // Transforms vertices through the
-    // rendering pipeline.
-    //
-    // Fragment Shader:
-    // Computes the final pixel color.
-    //--------------------------------------------------
+    glEnable(GL_DEPTH_TEST);
 
     Shader shader(
         "Src/Shaders/vertex.glsl",
-        "Src/Shaders/fragment.glsl");
+        "Src/Shaders/fragment.glsl"
+    );
 
-    //--------------------------------------------------
-    // Create main game controller.
-    //
-    // The Game class manages:
-    //
-    //  • World generation
-    //  • Camera system
-    //  • Input processing
-    //  • Physics simulation
-    //  • Collision detection
-    //  • Rendering pipeline
-    //  • Interactive objects
-    //--------------------------------------------------
+    Texture texture(
+        "Src/Resources/Textures/TX_TreasureChest.jpg"
+    );
 
-    Game game(
-        window,
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT);
+    // IMPORTANTE:
+    // Agora o OpenGL já está inicializado.
+    chest = new TreasureChest();
 
-    //--------------------------------------------------
-    // Initialize all game systems.
-    //
-    // Includes:
-    //
-    //  • Renderer initialization
-    //  • Camera setup
-    //  • World generation
-    //  • Object creation
-    //  • Shader configuration
-    //--------------------------------------------------
+    chest->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    if (!game.Initialize(
-        &shader))
+    while (!glfwWindowShouldClose(window))
     {
-        std::cout
-            << "Failed to initialize game"
-            << std::endl;
+        float currentFrame = (float)glfwGetTime();
 
-        glfwDestroyWindow(
-            window);
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        glfwTerminate();
+        ProcessInput(window);
 
-        return -1;
-    }
+        chest->Update(deltaTime);
 
-    //--------------------------------------------------
-    // Store initial timestamp.
-    //
-    // Used for delta time calculations.
-    //
-    // Delta time allows movement and
-    // simulation to remain independent
-    // of frame rate.
-    //--------------------------------------------------
+        glClearColor(0.25f, 0.35f, 0.45f, 1.0f);
 
-    float lastTime =
-        static_cast<float>(
-            glfwGetTime());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //--------------------------------------------------
-    // Main Application Loop.
-    //
-    // Every frame performs:
-    //
-    //  1. Process Input
-    //  2. Update World
-    //  3. Render Scene
-    //  4. Present Frame
-    //
-    // This architecture is used by
-    // most commercial game engines.
-    //--------------------------------------------------
+        shader.Use();
 
-    while (
-        !glfwWindowShouldClose(
-            window))
-    {
-        //--------------------------------------------------
-        // Current frame time.
-        //--------------------------------------------------
+        texture.Bind(0);
 
-        float currentTime =
-            static_cast<float>(
-                glfwGetTime());
+        shader.SetInt("texture1", 0);
 
-        //--------------------------------------------------
-        // Compute delta time.
-        //
-        // Delta Time =
-        //
-        // Current Time
-        //      -
-        // Previous Time
-        //
-        // Produces frame-rate independent
-        // movement and physics.
-        //--------------------------------------------------
+        glm::mat4 projection = glm::perspective(
+            glm::radians(camera.Zoom),
+            (float)SCR_WIDTH / SCR_HEIGHT,
+            0.1f,
+            100.0f
+        );
 
-        float deltaTime =
-            currentTime -
-            lastTime;
+        shader.SetMat4("projection", projection);
+        shader.SetMat4("view", camera.GetViewMatrix());
 
-        lastTime =
-            currentTime;
+        chest->Draw(shader);
 
-        //--------------------------------------------------
-        // Allow application exit.
-        //
-        // ESC closes the application.
-        //--------------------------------------------------
-
-        if (
-            glfwGetKey(
-                window,
-                GLFW_KEY_ESCAPE)
-            ==
-            GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(
-                window,
-                GLFW_TRUE);
-        }
-
-        //--------------------------------------------------
-        // Process user input.
-        //
-        // Examples:
-        //
-        //  • WASD movement
-        //  • Mouse look
-        //  • Sprint
-        //  • Jump
-        //  • Door interaction
-        //--------------------------------------------------
-
-        game.ProcessInput(
-            deltaTime);
-
-        //--------------------------------------------------
-        // Update game systems.
-        //
-        // Includes:
-        //
-        //  • Camera update
-        //  • Physics update
-        //  • Gravity
-        //  • Collision detection
-        //  • Object animation
-        //--------------------------------------------------
-
-        game.Update(
-            deltaTime);
-
-        //--------------------------------------------------
-        // Render current frame.
-        //
-        // Draws:
-        //
-        //  • Terrain
-        //  • Trees
-        //  • Castle
-        //  • Door
-        //  • World geometry
-        //
-        // Rendering uses:
-        //
-        //      Model Matrix
-        //              ↓
-        //      View Matrix
-        //              ↓
-        //   Projection Matrix
-        //--------------------------------------------------
-
-        game.Render();
-
-        //--------------------------------------------------
-        // Present rendered image.
-        //
-        // Double buffering prevents
-        // flickering and tearing.
-        //--------------------------------------------------
-
-        glfwSwapBuffers(
-            window);
-
-        //--------------------------------------------------
-        // Process operating system events.
-        //
-        // Examples:
-        //
-        //  • Keyboard input
-        //  • Mouse movement
-        //  • Window events
-        //  • Close requests
-        //--------------------------------------------------
-
+        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    //--------------------------------------------------
-    // Shutdown game systems.
-    //
-    // Release all allocated resources.
-    //--------------------------------------------------
-
-    game.Shutdown();
-
-    //--------------------------------------------------
-    // Destroy application window.
-    //--------------------------------------------------
-
-    glfwDestroyWindow(
-        window);
-
-    //--------------------------------------------------
-    // Shutdown GLFW.
-    //--------------------------------------------------
+    delete chest;
 
     glfwTerminate();
-
-    //--------------------------------------------------
-    // Exit successfully.
-    //--------------------------------------------------
 
     return 0;
 }

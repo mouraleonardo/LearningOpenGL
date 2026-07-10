@@ -1,46 +1,34 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include <vector>
+#include <glew.h>
+#include <glm.hpp>
+
+struct Vertex
+{
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoord;
+};
 
 class Mesh
 {
-private:
-
-    //--------------------------------------------------
-    // OpenGL Objects
-    //--------------------------------------------------
-
-    unsigned int VAO;
-
-    unsigned int VBO;
-
-    //--------------------------------------------------
-    // Geometry
-    //--------------------------------------------------
-
-    unsigned int vertexCount;
-
 public:
 
-    //--------------------------------------------------
-    // Constructor
-    //--------------------------------------------------
+    Mesh();
 
-    Mesh(
-        const std::vector<float>& vertices);
-
-    //--------------------------------------------------
-    // Render
-    //--------------------------------------------------
+    ~Mesh();
 
     void Draw() const;
 
-    //--------------------------------------------------
-    // Destructor
-    //--------------------------------------------------
+private:
 
-    ~Mesh();
+    GLuint VAO;
+    GLuint VBO;
+
+    std::vector<Vertex> vertices;
+
+    void BuildCube();
+
+    void SetupMesh();
 };
-
-#endif

@@ -1,223 +1,129 @@
-#include "Shader.h"
+#pragma once
 
-#include <glew.h>
+#include "Shader.h"
 
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <string>
 
-Shader::Shader(
-    const char* vertexPath,
-    const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
-    //--------------------------------------------------
-    // Open Shader Files
-    //--------------------------------------------------
+    std::string vertexCode = ReadFile(vertexPath);
+    std::string fragmentCode = ReadFile(fragmentPath);
 
-    std::ifstream vertexFile(
-        vertexPath);
+    GLuint vertexShader = Compile(GL_VERTEX_SHADER, vertexCode);
+    GLuint fragmentShader = Compile(GL_FRAGMENT_SHADER, fragmentCode);
 
-    std::ifstream fragmentFile(
-        fragmentPath);
+    ID = glCreateProgram();
 
-    if (!vertexFile.is_open())
+    glAttachShader(ID, vertexShader);
+    glAttachShader(ID, fragmentShader);
+
+    glLinkProgram(ID);
+
+    CheckProgram(ID);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+std::string Shader::ReadFile(const char* path)
+{
+    std::ifstream file(path);
+
+    if (!file.is_open())
     {
-        std::cout
-            << "ERROR OPENING "
-            << vertexPath
-            << std::endl;
+        std::cout << "Erro ao abrir: " << path << std::endl;
+        return "";
     }
 
-    if (!fragmentFile.is_open())
-    {
-        std::cout
-            << "ERROR OPENING "
-            << fragmentPath
-            << std::endl;
-    }
+    std::stringstream stream;
+    stream << file.rdbuf();
 
-    //--------------------------------------------------
-    // Read Shader Source
-    //--------------------------------------------------
+    file.close();
 
-    std::stringstream vertexStream;
-    std::stringstream fragmentStream;
+    return stream.str();
+}
 
-    vertexStream
-        << vertexFile.rdbuf();
+GLuint Shader::Compile(GLenum type, const std::string& source)
+{
+    GLuint shader = glCreateShader(type);
 
-    fragmentStream
-        << fragmentFile.rdbuf();
+    const char* code = source.c_str();
 
-    std::string vertexCode =
-        vertexStream.str();
+    glShaderSource(shader, 1, &code, nullptr);
 
-    std::string fragmentCode =
-        fragmentStream.str();
-
-    const char* vertexSource =
-        vertexCode.c_str();
-
-    const char* fragmentSource =
-        fragmentCode.c_str();
-
-    //--------------------------------------------------
-    // Compile Status
-    //--------------------------------------------------
+    glCompileShader(shader);
 
     GLint success;
 
-    GLchar infoLog[1024];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
-    //--------------------------------------------------
-    // Vertex Shader
-    //--------------------------------------------------
+    if (!success)
+    {
+        char infoLog[512];
 
-    GLuint vertexShader =
-        glCreateShader(
-            GL_VERTEX_SHADER);
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
 
-    glShaderSource(
-        vertexShader,
+        std::cout << "Erro ao compilar Shader:\n";
+        std::cout << infoLog << std::endl;
+    }
+
+    return shader;
+}
+
+void Shader::CheckProgram(GLuint program)
+{
+    GLint success;
+
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+    if (!success)
+    {
+        char infoLog[512];
+
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+
+        std::cout << "Erro ao linkar Shader Program:\n";
+        std::cout << infoLog << std::endl;
+    }
+}
+
+void Shader::Use() const
+{
+    glUseProgram(ID);
+}
+
+void Shader::SetBool(const std::string& name, bool value) const
+{
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+}
+
+void Shader::SetInt(const std::string& name, int value) const
+{
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::SetFloat(const std::string& name, float value) const
+{
+    glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::SetVec3(const std::string& name, const glm::vec3& value) const
+{
+    glUniform3fv(
+        glGetUniformLocation(ID, name.c_str()),
         1,
-        &vertexSource,
-        nullptr);
+        &value[0]
+    );
+}
 
-    glCompileShader(
-        vertexShader);
-
-    glGetShaderiv(
-        vertexShader,
-        GL_COMPILE_STATUS,
-        &success);
-
-    if (!success)
-    {
-        glGetShaderInfoLog(
-            vertexShader,
-            sizeof(infoLog),
-            nullptr,
-            infoLog);
-
-        std::cout
-            << "VERTEX SHADER ERROR:"
-            << std::endl
-            << infoLog
-            << std::endl;
-    }
-
-    //--------------------------------------------------
-    // Fragment Shader
-    //--------------------------------------------------
-
-    GLuint fragmentShader =
-        glCreateShader(
-            GL_FRAGMENT_SHADER);
-
-    glShaderSource(
-        fragmentShader,
+void Shader::SetMat4(const std::string& name, const glm::mat4& value) const
+{
+    glUniformMatrix4fv(
+        glGetUniformLocation(ID, name.c_str()),
         1,
-        &fragmentSource,
-        nullptr);
-
-    glCompileShader(
-        fragmentShader);
-
-    glGetShaderiv(
-        fragmentShader,
-        GL_COMPILE_STATUS,
-        &success);
-
-    if (!success)
-    {
-        glGetShaderInfoLog(
-            fragmentShader,
-            sizeof(infoLog),
-            nullptr,
-            infoLog);
-
-        std::cout
-            << "FRAGMENT SHADER ERROR:"
-            << std::endl
-            << infoLog
-            << std::endl;
-    }
-
-    //--------------------------------------------------
-    // Shader Program
-    //--------------------------------------------------
-
-    programID =
-        glCreateProgram();
-
-    glAttachShader(
-        programID,
-        vertexShader);
-
-    glAttachShader(
-        programID,
-        fragmentShader);
-
-    glLinkProgram(
-        programID);
-
-    glGetProgramiv(
-        programID,
-        GL_LINK_STATUS,
-        &success);
-
-    if (!success)
-    {
-        glGetProgramInfoLog(
-            programID,
-            sizeof(infoLog),
-            nullptr,
-            infoLog);
-
-        std::cout
-            << "PROGRAM LINK ERROR:"
-            << std::endl
-            << infoLog
-            << std::endl;
-    }
-
-    //--------------------------------------------------
-    // Cleanup
-    //--------------------------------------------------
-
-    glDeleteShader(
-        vertexShader);
-
-    glDeleteShader(
-        fragmentShader);
-}
-
-//--------------------------------------------------
-// Use Program
-//--------------------------------------------------
-
-void Shader::Use()
-{
-    glUseProgram(
-        programID);
-}
-
-//--------------------------------------------------
-// Accessor
-//--------------------------------------------------
-
-unsigned int Shader::GetID() const
-{
-    return programID;
-}
-
-//--------------------------------------------------
-// Destructor
-//--------------------------------------------------
-
-Shader::~Shader()
-{
-    glDeleteProgram(
-        programID);
+        GL_FALSE,
+        &value[0][0]
+    );
 }

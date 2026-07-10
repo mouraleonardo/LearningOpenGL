@@ -1,113 +1,152 @@
 #include "Mesh.h"
 
-#include <glew.h>
-
-Mesh::Mesh(
-    const std::vector<float>& vertices)
+Mesh::Mesh()
 {
-    //--------------------------------------------------
-    // Vertex Count
-    //--------------------------------------------------
-
-    vertexCount =
-        static_cast<unsigned int>(
-            vertices.size() / 6);
-
-    //--------------------------------------------------
-    // Create OpenGL Objects
-    //--------------------------------------------------
-
-    glGenVertexArrays(
-        1,
-        &VAO);
-
-    glGenBuffers(
-        1,
-        &VBO);
-
-    //--------------------------------------------------
-    // Bind VAO
-    //--------------------------------------------------
-
-    glBindVertexArray(
-        VAO);
-
-    //--------------------------------------------------
-    // Upload Vertex Data
-    //--------------------------------------------------
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        VBO);
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        vertices.size()
-        * sizeof(float),
-
-        vertices.data(),
-
-        GL_STATIC_DRAW);
-
-    //--------------------------------------------------
-    // Position Attribute
-    //--------------------------------------------------
-
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        6 * sizeof(float),
-        (void*)0);
-
-    glEnableVertexAttribArray(
-        0);
-
-    //--------------------------------------------------
-    // Color Attribute
-    //--------------------------------------------------
-
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        6 * sizeof(float),
-        (void*)(3 * sizeof(float)));
-
-    glEnableVertexAttribArray(
-        1);
-
-    //--------------------------------------------------
-    // Cleanup
-    //--------------------------------------------------
-
-    glBindVertexArray(
-        0);
-}
-
-void Mesh::Draw() const
-{
-    glBindVertexArray(
-        VAO);
-
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        vertexCount);
-
-    glBindVertexArray(
-        0);
+    BuildCube();
+    SetupMesh();
 }
 
 Mesh::~Mesh()
 {
-    glDeleteVertexArrays(
-        1,
-        &VAO);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+}
 
-    glDeleteBuffers(
+void Mesh::BuildCube()
+{
+    vertices =
+    {
+        //=========================
+        // Frente (+Z)
+        //=========================
+
+        {{-0.5f,-0.5f, 0.5f},{0,0,1},{0,0}},
+        {{ 0.5f,-0.5f, 0.5f},{0,0,1},{1,0}},
+        {{ 0.5f, 0.5f, 0.5f},{0,0,1},{1,1}},
+
+        {{-0.5f,-0.5f, 0.5f},{0,0,1},{0,0}},
+        {{ 0.5f, 0.5f, 0.5f},{0,0,1},{1,1}},
+        {{-0.5f, 0.5f, 0.5f},{0,0,1},{0,1}},
+
+        //=========================
+        // Trás (-Z)
+        //=========================
+
+        {{ 0.5f,-0.5f,-0.5f},{0,0,-1},{0,0}},
+        {{-0.5f,-0.5f,-0.5f},{0,0,-1},{1,0}},
+        {{-0.5f, 0.5f,-0.5f},{0,0,-1},{1,1}},
+
+        {{ 0.5f,-0.5f,-0.5f},{0,0,-1},{0,0}},
+        {{-0.5f, 0.5f,-0.5f},{0,0,-1},{1,1}},
+        {{ 0.5f, 0.5f,-0.5f},{0,0,-1},{0,1}},
+
+        //=========================
+        // Esquerda (-X)
+        //=========================
+
+        {{-0.5f,-0.5f,-0.5f},{-1,0,0},{0,0}},
+        {{-0.5f,-0.5f, 0.5f},{-1,0,0},{1,0}},
+        {{-0.5f, 0.5f, 0.5f},{-1,0,0},{1,1}},
+
+        {{-0.5f,-0.5f,-0.5f},{-1,0,0},{0,0}},
+        {{-0.5f, 0.5f, 0.5f},{-1,0,0},{1,1}},
+        {{-0.5f, 0.5f,-0.5f},{-1,0,0},{0,1}},
+
+        //=========================
+        // Direita (+X)
+        //=========================
+
+        {{ 0.5f,-0.5f, 0.5f},{1,0,0},{0,0}},
+        {{ 0.5f,-0.5f,-0.5f},{1,0,0},{1,0}},
+        {{ 0.5f, 0.5f,-0.5f},{1,0,0},{1,1}},
+
+        {{ 0.5f,-0.5f, 0.5f},{1,0,0},{0,0}},
+        {{ 0.5f, 0.5f,-0.5f},{1,0,0},{1,1}},
+        {{ 0.5f, 0.5f, 0.5f},{1,0,0},{0,1}},
+
+        //=========================
+        // Topo (+Y)
+        //=========================
+
+        {{-0.5f, 0.5f, 0.5f},{0,1,0},{0,0}},
+        {{ 0.5f, 0.5f, 0.5f},{0,1,0},{1,0}},
+        {{ 0.5f, 0.5f,-0.5f},{0,1,0},{1,1}},
+
+        {{-0.5f, 0.5f, 0.5f},{0,1,0},{0,0}},
+        {{ 0.5f, 0.5f,-0.5f},{0,1,0},{1,1}},
+        {{-0.5f, 0.5f,-0.5f},{0,1,0},{0,1}},
+
+        //=========================
+        // Base (-Y)
+        //=========================
+
+        {{-0.5f,-0.5f,-0.5f},{0,-1,0},{0,0}},
+        {{ 0.5f,-0.5f,-0.5f},{0,-1,0},{1,0}},
+        {{ 0.5f,-0.5f, 0.5f},{0,-1,0},{1,1}},
+
+        {{-0.5f,-0.5f,-0.5f},{0,-1,0},{0,0}},
+        {{ 0.5f,-0.5f, 0.5f},{0,-1,0},{1,1}},
+        {{-0.5f,-0.5f, 0.5f},{0,-1,0},{0,1}},
+    };
+}
+
+void Mesh::SetupMesh()
+{
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        vertices.size() * sizeof(Vertex),
+        vertices.data(),
+        GL_STATIC_DRAW
+    );
+
+    // Position
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        (void*)0
+    );
+    glEnableVertexAttribArray(0);
+
+    // Normal
+    glVertexAttribPointer(
         1,
-        &VBO);
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        (void*)offsetof(Vertex, Normal)
+    );
+    glEnableVertexAttribArray(1);
+
+    // UV
+    glVertexAttribPointer(
+        2,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        (void*)offsetof(Vertex, TexCoord)
+    );
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+}
+
+void Mesh::Draw() const
+{
+    glBindVertexArray(VAO);
+
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glBindVertexArray(0);
 }
