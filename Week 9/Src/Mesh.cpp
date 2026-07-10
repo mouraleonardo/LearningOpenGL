@@ -1,24 +1,106 @@
+/*
+    ============================================================
+    Mesh - OpenGL
+
+    Author: Leonardo Moura
+    Date: 2026
+
+    Description:
+
+    This file implements a simple Mesh class responsible for
+    creating and rendering a textured cube.
+
+    The cube is entirely generated in code using vertex data.
+    Each face contains its own vertices, normals and texture
+    coordinates, allowing every face to have independent
+    lighting and texture mapping.
+
+    The mesh is uploaded to GPU memory using Vertex Buffer
+    Objects (VBO) and Vertex Array Objects (VAO).
+
+    Responsibilities:
+
+        • Build cube geometry
+        • Upload vertex data to the GPU
+        • Configure vertex attributes
+        • Render the cube
+        • Release GPU resources
+
+    Technologies:
+
+        • OpenGL 3.3 Core Profile
+        • GLEW
+        • GLM
+        • C++
+
+    Learning Topics:
+
+        • Mesh Generation
+        • Vertex Buffers (VBO)
+        • Vertex Arrays (VAO)
+        • Vertex Attributes
+        • Texture Coordinates
+        • Vertex Normals
+        • GPU Memory
+        • Draw Calls
+
+    ============================================================
+*/
+
 #include "Mesh.h"
 
 Mesh::Mesh()
 {
+    //----------------------------------------------------------
+    // Build the cube geometry.
+    //----------------------------------------------------------
+
     BuildCube();
+
+    //----------------------------------------------------------
+    // Upload the mesh to the GPU.
+    //----------------------------------------------------------
+
     SetupMesh();
 }
 
 Mesh::~Mesh()
 {
+    //----------------------------------------------------------
+    // Release GPU resources.
+    //----------------------------------------------------------
+
     glDeleteVertexArrays(1, &VAO);
+
     glDeleteBuffers(1, &VBO);
 }
 
 void Mesh::BuildCube()
 {
+    //----------------------------------------------------------
+    // Create the cube geometry.
+    //
+    // Every face owns its own vertices because each face has
+    // a different normal vector and texture coordinates.
+    //
+    // Cube:
+    //
+    //          +Y
+    //           ↑
+    //
+    //      (-X)   (+X)
+    //
+    //           •
+    //          /
+    //       +Z
+    //
+    //----------------------------------------------------------
+
     vertices =
     {
-        //=========================
-        // Frente (+Z)
-        //=========================
+        //------------------------------------------------------
+        // Front Face (+Z)
+        //------------------------------------------------------
 
         {{-0.5f,-0.5f, 0.5f},{0,0,1},{0,0}},
         {{ 0.5f,-0.5f, 0.5f},{0,0,1},{1,0}},
@@ -28,9 +110,9 @@ void Mesh::BuildCube()
         {{ 0.5f, 0.5f, 0.5f},{0,0,1},{1,1}},
         {{-0.5f, 0.5f, 0.5f},{0,0,1},{0,1}},
 
-        //=========================
-        // Trás (-Z)
-        //=========================
+        //------------------------------------------------------
+        // Back Face (-Z)
+        //------------------------------------------------------
 
         {{ 0.5f,-0.5f,-0.5f},{0,0,-1},{0,0}},
         {{-0.5f,-0.5f,-0.5f},{0,0,-1},{1,0}},
@@ -40,9 +122,9 @@ void Mesh::BuildCube()
         {{-0.5f, 0.5f,-0.5f},{0,0,-1},{1,1}},
         {{ 0.5f, 0.5f,-0.5f},{0,0,-1},{0,1}},
 
-        //=========================
-        // Esquerda (-X)
-        //=========================
+        //------------------------------------------------------
+        // Left Face (-X)
+        //------------------------------------------------------
 
         {{-0.5f,-0.5f,-0.5f},{-1,0,0},{0,0}},
         {{-0.5f,-0.5f, 0.5f},{-1,0,0},{1,0}},
@@ -52,9 +134,9 @@ void Mesh::BuildCube()
         {{-0.5f, 0.5f, 0.5f},{-1,0,0},{1,1}},
         {{-0.5f, 0.5f,-0.5f},{-1,0,0},{0,1}},
 
-        //=========================
-        // Direita (+X)
-        //=========================
+        //------------------------------------------------------
+        // Right Face (+X)
+        //------------------------------------------------------
 
         {{ 0.5f,-0.5f, 0.5f},{1,0,0},{0,0}},
         {{ 0.5f,-0.5f,-0.5f},{1,0,0},{1,0}},
@@ -64,9 +146,9 @@ void Mesh::BuildCube()
         {{ 0.5f, 0.5f,-0.5f},{1,0,0},{1,1}},
         {{ 0.5f, 0.5f, 0.5f},{1,0,0},{0,1}},
 
-        //=========================
-        // Topo (+Y)
-        //=========================
+        //------------------------------------------------------
+        // Top Face (+Y)
+        //------------------------------------------------------
 
         {{-0.5f, 0.5f, 0.5f},{0,1,0},{0,0}},
         {{ 0.5f, 0.5f, 0.5f},{0,1,0},{1,0}},
@@ -76,9 +158,9 @@ void Mesh::BuildCube()
         {{ 0.5f, 0.5f,-0.5f},{0,1,0},{1,1}},
         {{-0.5f, 0.5f,-0.5f},{0,1,0},{0,1}},
 
-        //=========================
-        // Base (-Y)
-        //=========================
+        //------------------------------------------------------
+        // Bottom Face (-Y)
+        //------------------------------------------------------
 
         {{-0.5f,-0.5f,-0.5f},{0,-1,0},{0,0}},
         {{ 0.5f,-0.5f,-0.5f},{0,-1,0},{1,0}},
@@ -92,10 +174,23 @@ void Mesh::BuildCube()
 
 void Mesh::SetupMesh()
 {
+    //----------------------------------------------------------
+    // Create the GPU objects.
+    //----------------------------------------------------------
+
     glGenVertexArrays(1, &VAO);
+
     glGenBuffers(1, &VBO);
 
+    //----------------------------------------------------------
+    // Bind the Vertex Array Object.
+    //----------------------------------------------------------
+
     glBindVertexArray(VAO);
+
+    //----------------------------------------------------------
+    // Upload vertex data to GPU memory.
+    //----------------------------------------------------------
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -106,7 +201,12 @@ void Mesh::SetupMesh()
         GL_STATIC_DRAW
     );
 
-    // Position
+    //----------------------------------------------------------
+    // Vertex Attribute 0
+    //
+    // Position (vec3)
+    //----------------------------------------------------------
+
     glVertexAttribPointer(
         0,
         3,
@@ -115,9 +215,15 @@ void Mesh::SetupMesh()
         sizeof(Vertex),
         (void*)0
     );
+
     glEnableVertexAttribArray(0);
 
-    // Normal
+    //----------------------------------------------------------
+    // Vertex Attribute 1
+    //
+    // Normal (vec3)
+    //----------------------------------------------------------
+
     glVertexAttribPointer(
         1,
         3,
@@ -126,9 +232,15 @@ void Mesh::SetupMesh()
         sizeof(Vertex),
         (void*)offsetof(Vertex, Normal)
     );
+
     glEnableVertexAttribArray(1);
 
-    // UV
+    //----------------------------------------------------------
+    // Vertex Attribute 2
+    //
+    // Texture Coordinates (vec2)
+    //----------------------------------------------------------
+
     glVertexAttribPointer(
         2,
         2,
@@ -137,16 +249,47 @@ void Mesh::SetupMesh()
         sizeof(Vertex),
         (void*)offsetof(Vertex, TexCoord)
     );
+
     glEnableVertexAttribArray(2);
+
+    //----------------------------------------------------------
+    // Unbind the VAO.
+    //----------------------------------------------------------
 
     glBindVertexArray(0);
 }
 
 void Mesh::Draw() const
 {
+    //----------------------------------------------------------
+    // Bind the VAO before rendering.
+    //----------------------------------------------------------
+
     glBindVertexArray(VAO);
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    //----------------------------------------------------------
+    // Render the cube.
+    //
+    // The cube contains:
+    //
+    //      6 Faces
+    //      2 Triangles per Face
+    //      3 Vertices per Triangle
+    //
+    // Total:
+    //
+    //      36 Vertices
+    //----------------------------------------------------------
+
+    glDrawArrays(
+        GL_TRIANGLES,
+        0,
+        36
+    );
+
+    //----------------------------------------------------------
+    // Unbind the VAO.
+    //----------------------------------------------------------
 
     glBindVertexArray(0);
 }
