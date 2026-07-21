@@ -163,7 +163,19 @@ std::string Shader::ReadFile(const char* path)
 
     file.close();
 
-    return stream.str();
+    std::string source = stream.str();
+
+    // Some editors save UTF-8 files with a three-byte BOM. GLSL expects
+    // #version to be the first token, and some drivers reject those bytes.
+    if (source.size() >= 3 &&
+        static_cast<unsigned char>(source[0]) == 0xEF &&
+        static_cast<unsigned char>(source[1]) == 0xBB &&
+        static_cast<unsigned char>(source[2]) == 0xBF)
+    {
+        source.erase(0, 3);
+    }
+
+    return source;
 }
 
 GLuint Shader::Compile(

@@ -1,22 +1,7 @@
-﻿/*
-    Vertex shader da treasure chest.
-
-    Este estágio executa uma vez para cada vértice. Além de produzir a
-    posição final em clip space, ele prepara os três dados interpolados que
-    o fragment shader necessita para calcular Phong lighting por pixel:
-
-      TexCoord - coordenada usada para amostrar a textura;
-      FragPos  - posição do fragmento em world space;
-      Normal   - normal da superfície transformada para world space.
-
-    Todos os vetores usados na iluminação ficam no mesmo espaço (world
-    space). Isso é essencial: produtos escalares entre vetores expressos em
-    espaços diferentes não representam ângulos corretos.
-*/
-
+﻿
 #version 330 core
 
-// Layout idêntico ao configurado em Mesh::SetupMesh().
+// Identical to the layout configured in Mesh::SetupMesh().
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoord;
@@ -33,14 +18,14 @@ void main()
 {
     TexCoord = aTexCoord;
 
-    // Calculada separadamente porque a iluminação precisa desta posição
-    // antes que view e projection alterem o sistema de coordenadas.
+    // calculates the position of the vertex in world space, which is needed for lighting calculations
+    // before transforming to view space and clip space. The w component is set to 1.0 to ensure proper translation.
     vec4 worldPosition = model * vec4(aPosition, 1.0);
     FragPos = worldPosition.xyz;
 
-    // Normais não devem ser transformadas diretamente por model quando há
-    // escala não uniforme (como nas paredes finas do baú). A inversa
-    // transposta preserva a perpendicularidade entre normal e superfície.
+    // normals must be transformed by the inverse transpose of the model matrix to account for any non-uniform scaling that may have been applied to the model. This ensures that the normals remain perpendicular to the surface after transformations, which is crucial for accurate lighting calculations.
+    // non uniform scaling can skew the normals, leading to incorrect lighting. The inverse transpose of the model matrix corrects this by effectively "undoing" the scaling effect on the normals.
+    // transport the normals to world space using the inverse transpose of the model matrix. This is necessary because normals are directional vectors and should not be affected by translation, only by rotation and scaling.
     mat3 normalMatrix = mat3(transpose(inverse(model)));
     Normal = normalMatrix * aNormal;
 

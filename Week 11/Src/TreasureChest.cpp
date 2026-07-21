@@ -50,7 +50,6 @@
 
     ============================================================
 */
-
 #include "TreasureChest.h"
 
 #include <gtc/matrix_transform.hpp>
