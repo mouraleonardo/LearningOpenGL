@@ -258,6 +258,38 @@ Main implemented features:
 
 ---
 
+## Week 11 — Treasure Chest with Phong Lighting
+
+This project demonstrates the implementation of **per-fragment Phong lighting** in an interactive 3D treasure chest using OpenGL 3.3.
+
+The treasure chest is built procedurally by reusing a cube mesh. Instead of using two solid cubes, the base and lid are assembled from thin wall pieces, creating visible internal depth when the chest opens.
+
+### Features
+
+- Hollow treasure chest base
+- Lid with visible internal depth
+- Hierarchical lid transformation
+- Smooth opening and closing animation
+- Frame-independent movement using delta time
+- Textured cube geometry
+- Per-fragment Phong lighting
+- Ambient lighting
+- Lambert diffuse lighting
+- Phong specular reflections
+- Secondary fill light
+- Subtle rim lighting
+- Exposure control
+- Gamma correction
+- First-person camera controls
+
+### Phong Lighting
+
+The final lighting is calculated inside the fragment shader, producing smoother results than per-vertex lighting.
+
+The illumination model combines three main components: glsl Phong = Ambient + Diffuse + Specular
+
+---
+
 # Project Structure
 
 ```text
