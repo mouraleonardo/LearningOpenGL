@@ -206,6 +206,58 @@ Current features include:
 
 ---
 
+## Week 9 and 10
+
+Implements a complete 2D survival game using modern OpenGL, GLFW,
+GLEW, GLM and stb_image.
+
+The game features an animated gangster character capable of walking, running, jumping and performing three different melee attacks. Input is supported through both keyboard and compatible gamepads.
+
+Adds enemy AI with randomized spawning from both sides of the screen. Enemies pursue the player, attack at close range, receive damage and die after three successful hits. Up to five enemies can appear simultaneously, with a two-second spawn interval.
+
+Implements a player health system with five health points and a heart-based HUD. Each enemy hit removes one heart. When the player dies, the death animation finishes before displaying a centered Game Over screen with a fade-in transition. The game can be restarted with Enter or closed with Escape.
+
+Adds synchronized audio for walking, running, randomized punch impacts, fatal hits, looping background music and the Game Over sequence. Audio code is organized into a dedicated Audio module with independent music and sound-effect playback.
+
+Adds keyboard and gamepad controls:
+
+- A/D or directional arrows: move
+- Left Shift or LB/L1: run
+- Space or A/Cross: jump
+- J or X/Square: attack 1
+- K or Y/Triangle: attack 2
+- L or B/Circle: attack 3
+- Enter: restart after Game Over
+- Escape or Start/Options: exit
+
+Organizes the project into dedicated modules for Animation, Audio, Core, Gameplay, Graphics, Input, Physics, Resources and UI.
+
+Documents all author-owned source files, classes, functions, shaders and extension points. Third-party dependencies remain unchanged.
+
+Main implemented features:
+
+- OpenGL 3.3 Core Profile rendering
+- Orthographic 2D camera
+- Animated sprite sheets
+- Frame-independent movement
+- Running and jumping mechanics
+- Melee combat with animation-based impact frames
+- Character and enemy health systems
+- Enemy pursuit and attack AI
+- Randomized enemy spawning
+- Refined body and attack hitboxes
+- Keyboard and gamepad input
+- Analog-stick dead zone
+- Five-heart health HUD
+- Game Over and restart flow
+- Fade-in UI transition
+- Background music and sound effects
+- Centralized resource management
+- Modular UI and audio architecture
+- Complete source-code documentation
+
+---
+
 # Project Structure
 
 ```text
